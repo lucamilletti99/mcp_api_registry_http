@@ -769,8 +769,8 @@ VALUES (
     warehouse_id: str,
     catalog: str,
     schema: str,
-    query_params: Dict[str, str] = None,
-    additional_headers: Dict[str, str] = None
+    query_params: str = None,
+    additional_headers: str = None
   ) -> dict:
     """Call a registered API using its Unity Catalog HTTP connection.
 
@@ -782,8 +782,8 @@ VALUES (
         warehouse_id: SQL warehouse ID to query registry
         catalog: Catalog name (required)
         schema: Schema name (required)
-        query_params: Optional query parameters to append to path
-        additional_headers: Optional additional headers to send
+        query_params: Optional query parameters as URL string (e.g., "param1=value1&param2=value2")
+        additional_headers: Optional additional headers as JSON string
 
     Returns:
         Dictionary with API response
@@ -820,10 +820,9 @@ VALUES (
       # Build full path with query params
       full_path = api_path
       if query_params:
-        from urllib.parse import urlencode
-        query_string = urlencode(query_params)
+        # query_params is already a URL-encoded string
         separator = '&' if '?' in full_path else '?'
-        full_path = f'{full_path}{separator}{query_string}'
+        full_path = f'{full_path}{separator}{query_params}'
 
       # Make request using UC HTTP connection
       w = get_workspace_client()
@@ -1193,7 +1192,7 @@ VALUES (
         schema=schema,
         http_method=http_method,
         documentation_url=documentation_url,
-        validate=True
+        validate=False  # Disable validation - requires working API key
       )
 
       if not registration_result.get('success'):
