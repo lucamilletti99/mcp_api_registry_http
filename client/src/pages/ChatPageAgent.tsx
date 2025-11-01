@@ -203,7 +203,7 @@ export function ChatPageAgent({
         checking: false,
       });
     } catch (error) {
-      console.error("Failed to validate api_registry table:", error);
+      console.error("Failed to validate api_http_registry table:", error);
       setTableValidation({
         exists: false,
         error: "Validation failed",
@@ -631,9 +631,9 @@ export function ChatPageAgent({
             </SelectContent>
             </Select>
             {!tableValidation.exists && !tableValidation.checking && (
-              <div className="flex items-center gap-1 text-red-500" title={`No api_registry table exists in ${selectedCatalogSchema}. Switch to a catalog.schema with the api_registry table, or create the api_registry table in this schema.`}>
+              <div className="flex items-center gap-1 text-red-500" title={`No api_http_registry table exists in ${selectedCatalogSchema}. Switch to a catalog.schema with the api_http_registry table, or run setup_api_http_registry_table.sql to create it.`}>
                 <AlertCircle className="h-4 w-4" />
-                <span className="text-xs">No api_registry table in this schema</span>
+                <span className="text-xs">No api_http_registry table in this schema</span>
               </div>
             )}
             {tableValidation.checking && (
@@ -658,13 +658,13 @@ export function ChatPageAgent({
               <h3 className={`font-semibold text-sm mb-1 ${
                 isDark ? "text-white" : "text-gray-900"
               }`}>
-                No api_registry table exists in {selectedCatalogSchema}
+                No api_http_registry table exists in {selectedCatalogSchema}
               </h3>
               <div className={`text-xs space-y-0.5 ${
                 isDark ? "text-white/70" : "text-gray-700"
               }`}>
-                <p>Switch to a catalog.schema with the api_registry table,</p>
-                <p>or create the api_registry table in <span className="font-mono font-medium">{selectedCatalogSchema}</span></p>
+                <p>Switch to a catalog.schema with the api_http_registry table,</p>
+                <p>or run setup_api_http_registry_table.sql to create it in <span className="font-mono font-medium">{selectedCatalogSchema}</span></p>
               </div>
             </div>
           </div>
@@ -1146,12 +1146,15 @@ export function ChatPageAgent({
             <section>
               <h3 className="text-lg font-semibold mb-2">🛠️ Available Tools</h3>
               <ul className={`list-disc list-inside space-y-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}>
-                <li><strong>discover_api_endpoint:</strong> Search and discover new APIs</li>
-                <li><strong>register_api_in_registry:</strong> Add APIs to the registry</li>
-                <li><strong>check_api_registry:</strong> View registered APIs</li>
-                <li><strong>call_api_endpoint:</strong> Make requests to APIs</li>
+                <li><strong>create_http_connection:</strong> Create UC HTTP connections (secure credentials)</li>
+                <li><strong>smart_register_with_connection:</strong> One-step API registration (creates connection + registers API)</li>
+                <li><strong>discover_api_endpoint:</strong> Test and validate API endpoints</li>
+                <li><strong>fetch_api_documentation:</strong> Parse API documentation</li>
+                <li><strong>check_api_http_registry:</strong> View registered APIs</li>
+                <li><strong>call_registered_api:</strong> Call registered APIs via UC connections</li>
                 <li><strong>execute_dbsql:</strong> Run SQL queries on Databricks</li>
                 <li><strong>list_warehouses:</strong> List SQL warehouses</li>
+                <li><strong>list_http_connections:</strong> List UC HTTP connections</li>
                 <li><strong>list_dbfs_files:</strong> Browse DBFS files</li>
               </ul>
             </section>

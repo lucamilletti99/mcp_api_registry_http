@@ -292,10 +292,10 @@ export function RegistryPage({ selectedWarehouse, selectedCatalogSchema }: Regis
               {error}
             </p>
             <div className={`text-sm mt-2 text-center max-w-md ${isDark ? 'text-white/60' : 'text-gray-600'}`}>
-              {error.toLowerCase().includes('table') || error.toLowerCase().includes('api_registry') ? (
+              {error.toLowerCase().includes('table') || error.toLowerCase().includes('api_http_registry') ? (
                 <>
-                  <p>Switch to a catalog.schema with the api_registry table,</p>
-                  <p className="mt-1">or create the api_registry table in <span className="font-mono">{selectedCatalogSchema}</span></p>
+                  <p>Switch to a catalog.schema with the api_http_registry table,</p>
+                  <p className="mt-1">or run setup_api_http_registry_table.sql to create it in <span className="font-mono">{selectedCatalogSchema}</span></p>
                 </>
               ) : (
                 <p>Please check your warehouse and catalog.schema selection</p>
