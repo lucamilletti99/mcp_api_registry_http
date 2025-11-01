@@ -217,7 +217,7 @@ async def list_all_catalog_schemas(request: Request) -> Dict[str, Any]:
 
 @router.get('/validate-api-registry-table')
 async def validate_api_registry_table(catalog: str, schema: str, warehouse_id: str, request: Request) -> Dict[str, Any]:
-    """Validate if api_registry table exists in the specified catalog.schema.
+    """Validate if api_http_registry table exists in the specified catalog.schema.
 
     Args:
         catalog: Catalog name
@@ -234,7 +234,7 @@ async def validate_api_registry_table(catalog: str, schema: str, warehouse_id: s
         w = get_workspace_client(request)
 
         # Build table name
-        table_name = f'{catalog}.{schema}.api_registry'
+        table_name = f'{catalog}.{schema}.api_http_registry'
 
         # Try to query the table with LIMIT 0 to check existence without fetching data
         query = f'SELECT * FROM {table_name} LIMIT 0'
@@ -280,8 +280,8 @@ async def validate_api_registry_table(catalog: str, schema: str, warehouse_id: s
                     'exists': False,
                     'error': 'TABLE_NOT_FOUND',
                     'table_name': table_name,
-                    'message': f'No api_registry table exists in {catalog}.{schema}',
-                    'suggestion': f'Create the api_registry table in {catalog}.{schema} or select a different catalog.schema',
+                    'message': f'No api_http_registry table exists in {catalog}.{schema}',
+                    'suggestion': f'Run setup_api_http_registry_table.sql to create the table in {catalog}.{schema}',
                 }
             else:
                 return {
@@ -299,14 +299,14 @@ async def validate_api_registry_table(catalog: str, schema: str, warehouse_id: s
             return {
                 'exists': False,
                 'error': 'TABLE_NOT_FOUND',
-                'table_name': f'{catalog}.{schema}.api_registry',
-                'message': f'No api_registry table exists in {catalog}.{schema}',
-                'suggestion': f'Create the api_registry table in {catalog}.{schema} or select a different catalog.schema',
+                'table_name': f'{catalog}.{schema}.api_http_registry',
+                'message': f'No api_http_registry table exists in {catalog}.{schema}',
+                'suggestion': f'Run setup_api_http_registry_table.sql to create the table in {catalog}.{schema}',
             }
 
         return {
             'exists': False,
             'error': str(e),
-            'table_name': f'{catalog}.{schema}.api_registry',
+            'table_name': f'{catalog}.{schema}.api_http_registry',
             'message': f'Failed to validate table: {str(e)}',
         }

@@ -32,6 +32,8 @@ CREATE TABLE IF NOT EXISTS {catalog}.{schema}.api_http_registry (
   CONSTRAINT api_http_registry_pk PRIMARY KEY (api_id)
 )
 COMMENT 'API Registry using Unity Catalog HTTP Connections for secure credential management. Credentials are stored in UC Connections, not in this table.'
+-- Default value features
 TBLPROPERTIES (
-  'delta.enableChangeDataFeed' = 'true'
+  'delta.enableChangeDataFeed' = 'true',
+  'delta.feature.allowColumnDefaults' = 'supported'
 );

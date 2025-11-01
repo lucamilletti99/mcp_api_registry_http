@@ -12,19 +12,19 @@ router = APIRouter()
 
 
 class RegisteredAPI(BaseModel):
-    """Model for a registered API."""
+    """Model for a registered API using UC HTTP Connections."""
     api_id: str
     api_name: str
     description: Optional[str] = None
-    api_endpoint: str
+    connection_name: str  # UC HTTP Connection name (replaces api_endpoint + auth_type)
+    api_path: str  # Path to append to connection base URL
     documentation_url: Optional[str] = None
     http_method: str = 'GET'
-    auth_type: str = 'none'
     status: str = 'pending'
     user_who_requested: Optional[str] = None
     created_at: Optional[str] = None
     modified_date: Optional[str] = None
-    last_validated: Optional[str] = None
+    validation_message: Optional[str] = None
 
 
 class APIRegistryResponse(BaseModel):
@@ -116,7 +116,7 @@ async def list_apis(
         ws = get_workspace_client(request)
 
         # Build fully-qualified table name
-        table_name = f'{catalog}.{schema}.api_registry'
+        table_name = f'{catalog}.{schema}.api_http_registry'
 
         # Query the registry table
         query = f"""
@@ -124,15 +124,15 @@ async def list_apis(
             api_id,
             api_name,
             description,
-            api_endpoint,
+            connection_name,
+            api_path,
             documentation_url,
             http_method,
-            auth_type,
             status,
             user_who_requested,
             created_at,
             modified_date,
-            validation_message as last_validated
+            validation_message
         FROM {table_name}
         ORDER BY modified_date DESC
         """
@@ -152,7 +152,7 @@ async def list_apis(
             if 'TABLE_OR_VIEW_NOT_FOUND' in error_message or 'does not exist' in error_message.lower():
                 raise HTTPException(
                     status_code=404,
-                    detail=f'No api_registry table exists in {catalog}.{schema}'
+                    detail=f'No api_http_registry table exists in {catalog}.{schema}. Please run setup_api_http_registry_table.sql first.'
                 )
             else:
                 raise HTTPException(
@@ -193,7 +193,7 @@ async def list_apis(
         if 'TABLE_OR_VIEW_NOT_FOUND' in error_str or 'does not exist' in error_str.lower():
             raise HTTPException(
                 status_code=404,
-                detail=f'No api_registry table exists in {catalog}.{schema}'
+                detail=f'No api_http_registry table exists in {catalog}.{schema}. Please run setup_api_http_registry_table.sql first.'
             )
 
         raise HTTPException(
@@ -234,16 +234,16 @@ async def update_api(
         ws = get_workspace_client(request)
 
         # Build fully-qualified table name
-        table_name = f'{catalog}.{schema}.api_registry'
+        table_name = f'{catalog}.{schema}.api_http_registry'
 
-        # Update query - include documentation_url if provided
+        # NOTE: This endpoint needs redesign for UC HTTP Connections architecture
+        # For now, just update basic metadata fields
         if documentation_url:
             query = f"""
             UPDATE {table_name}
             SET
                 api_name = '{api_name}',
                 description = '{description}',
-                api_endpoint = '{api_endpoint}',
                 documentation_url = '{documentation_url}',
                 modified_date = CURRENT_TIMESTAMP()
             WHERE api_id = '{api_id}'
@@ -254,7 +254,6 @@ async def update_api(
             SET
                 api_name = '{api_name}',
                 description = '{description}',
-                api_endpoint = '{api_endpoint}',
                 modified_date = CURRENT_TIMESTAMP()
             WHERE api_id = '{api_id}'
             """
@@ -306,7 +305,7 @@ async def delete_api(
         ws = get_workspace_client(request)
 
         # Build fully-qualified table name
-        table_name = f'{catalog}.{schema}.api_registry'
+        table_name = f'{catalog}.{schema}.api_http_registry'
 
         # Delete query
         query = f"""
