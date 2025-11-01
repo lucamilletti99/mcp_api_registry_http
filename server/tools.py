@@ -1099,7 +1099,8 @@ VALUES (
 
       # Step 1: Parse endpoint URL
       parsed = urlparse(endpoint_url)
-      host = parsed.netloc
+      # UC HTTP connections need full URL with protocol (e.g., https://api.example.com)
+      host = f'{parsed.scheme}://{parsed.netloc}'
 
       # Build path (path + query string)
       path = parsed.path
@@ -1108,7 +1109,7 @@ VALUES (
 
       base_path = parsed.path.rsplit('/', 1)[0] if '/' in parsed.path else ''
 
-      print(f'📍 Parsed endpoint - Host: {host}, Path: {path}')
+      print(f'📍 Parsed endpoint - Host: {host}, Path: {path}, Base path: {base_path}')
 
       # Step 2: Create UC HTTP Connection
       connection_name = f'{api_name.lower().replace(" ", "_")}_connection'
