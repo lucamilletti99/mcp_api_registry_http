@@ -145,7 +145,65 @@ databricks unity-catalog metastores list
 
 ---
 
-### 5. DBFS Access (Optional)
+### 5. Secret Scopes (Required for API Authentication)
+
+**Status:** Generally Available
+
+**Required only if:** You want to register APIs with authentication (API keys or bearer tokens)
+
+The app uses Databricks secret scopes to securely store API credentials. Two shared secret scopes are used:
+- `mcp_api_keys` - For API key authentication
+- `mcp_bearer_tokens` - For bearer token authentication
+
+**How to setup:**
+
+1. **Find your app's service principal ID** after first deployment:
+   ```bash
+   databricks apps get <your-app-name> --output json | grep service_principal_client_id
+   ```
+
+2. **Run the setup script** (as workspace admin):
+   ```bash
+   ./setup_shared_secrets.sh
+   # Enter the service principal ID when prompted
+   ```
+
+   Or manually:
+   ```bash
+   # Create the scopes
+   databricks secrets create-scope mcp_api_keys
+   databricks secrets create-scope mcp_bearer_tokens
+   
+   # Grant service principal WRITE access
+   databricks secrets put-acl mcp_api_keys <service-principal-id> WRITE
+   databricks secrets put-acl mcp_bearer_tokens <service-principal-id> WRITE
+   ```
+
+**Authentication Architecture:**
+- **Service principal** manages all secrets (not individual users)
+- **OAuth M2M** authentication bypasses token scope limitations
+- **One-time setup** by admin - then all users can register authenticated APIs
+- **No per-user permissions** needed
+
+**Required Permissions:**
+- Admin permissions to create secret scopes (one-time)
+- Service principal must have WRITE access to both scopes
+
+**How to verify:**
+```bash
+# Check scopes exist
+databricks secrets list-scopes | grep mcp_
+
+# Check service principal has access
+databricks secrets list-acls mcp_api_keys
+databricks secrets list-acls mcp_bearer_tokens
+```
+
+📖 **Detailed guide:** [SECRETS_WORKAROUND.md](SECRETS_WORKAROUND.md)
+
+---
+
+### 6. DBFS Access (Optional)
 
 **Status:** Generally Available
 
