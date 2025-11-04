@@ -8,6 +8,33 @@
 
 ---
 
+## ⚠️ ANTI-HALLUCINATION RULES (CRITICAL!)
+
+**NEVER assume anything from conversation history!**
+
+1. **❌ DO NOT assume an API is registered** just because you see it mentioned earlier in the conversation
+2. **❌ DO NOT use connection names from memory** - always get them fresh from `check_api_http_registry`
+3. **❌ DO NOT skip Step 1** even if the user asks about the same API multiple times
+4. **❌ DO NOT remember API paths from earlier turns** - fetch them from the registry EVERY TIME
+5. **✅ ALWAYS treat each request as a fresh start** - no caching, no assumptions
+
+**Example of WRONG behavior:**
+```
+User: "Show me GDP data from FRED"
+[You register FRED API]
+User: "Show me unemployment data from FRED"
+❌ WRONG: Using "fred_connection" from memory
+✅ RIGHT: Call check_api_http_registry first, get connection from results
+```
+
+**Why this matters:**
+- APIs might have been deleted
+- Connection names might have changed
+- You might be wrong about what's registered
+- The registry is the source of truth, not your memory
+
+---
+
 ## For ANY request about data, APIs, or external services
 
 **Examples that follow this workflow:**
@@ -23,6 +50,14 @@
 
 **YOU MUST DO THIS FIRST. NO TOOL CALLS BEFORE THIS.**
 
+**NO EXCEPTIONS - Even if:**
+- You think you know the API is registered
+- The user asked about it 2 messages ago
+- You see it in the conversation history
+- You're "pretty sure" it exists
+
+**ALWAYS check the registry. Period.**
+
 ```python
 check_api_http_registry(
     warehouse_id="<from context>",
@@ -32,10 +67,17 @@ check_api_http_registry(
 )
 ```
 
-**Read the results:**
-- Found an API that matches? Write down its `api_path` and `connection_name`
-- If YES → Go to Step 2 IMMEDIATELY
+**Read the results CAREFULLY:**
+- Found an API that matches? Write down its EXACT `api_path` and `connection_name` from the results
+- If YES → Go to Step 2 IMMEDIATELY using the EXACT values from the registry
 - If NO → Go to Step 3
+- If MULTIPLE matches → Choose the most relevant one and use its EXACT connection details
+
+**🚨 CRITICAL: Use the EXACT values from the registry response**
+- Don't modify the connection_name
+- Don't guess the api_path
+- Don't use values from conversation history
+- Copy exactly what `check_api_http_registry` returns
 
 ---
 
@@ -43,11 +85,19 @@ check_api_http_registry(
 
 **Use execute_dbsql with http_request() SQL**
 
-From Step 1, you got:
-- `connection_name` (e.g., "treasury_fx_rates_connection")
-- `api_path` (e.g., "/v1/accounting/od/rates_of_exchange")
+From Step 1's `check_api_http_registry` response, extract:
+- `connection_name` - Use the EXACT value from the registry (e.g., "treasury_fx_rates_connection")
+- `api_path` - Use the EXACT value from the registry (e.g., "/v1/accounting/od/rates_of_exchange")
 
-Now write a SQL query using these values (**Any queries passed to the query parameter should not include major whitespace and \n characters**)
+**🚨 DO NOT use connection names or paths from:**
+- Your memory
+- Earlier conversation turns
+- Guesses or assumptions
+- Documentation you fetched
+
+**✅ ONLY use values directly from the `check_api_http_registry` response you just received**
+
+Now write a SQL query using these EXACT values (**Any queries passed to the query parameter should not include major whitespace and \n characters**)
 
 ```python
 execute_dbsql(
