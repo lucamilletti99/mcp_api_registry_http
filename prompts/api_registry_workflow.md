@@ -12,13 +12,20 @@
 
 **NEVER assume anything from conversation history!**
 
+### Core Rules - Apply to EVERY Request:
+
 1. **❌ DO NOT assume an API is registered** just because you see it mentioned earlier in the conversation
 2. **❌ DO NOT use connection names from memory** - always get them fresh from `check_api_http_registry`
 3. **❌ DO NOT skip Step 1** even if the user asks about the same API multiple times
 4. **❌ DO NOT remember API paths from earlier turns** - fetch them from the registry EVERY TIME
-5. **✅ ALWAYS treat each request as a fresh start** - no caching, no assumptions
+5. **❌ DO NOT use documentation from conversation history** - fetch fresh docs with `fetch_api_documentation` every time
+6. **❌ DO NOT remember auth types, parameters, or URL structures** from previous registrations
+7. **❌ DO NOT assume registration details** - always call `check_api_http_registry` after registering to verify
+8. **✅ ALWAYS treat each request as a fresh start** - no caching, no assumptions, no memory
 
-**Example of WRONG behavior:**
+### Examples of WRONG vs RIGHT Behavior:
+
+**Scenario 1: Repeated API Calls**
 ```
 User: "Show me GDP data from FRED"
 [You register FRED API]
@@ -27,10 +34,28 @@ User: "Show me unemployment data from FRED"
 ✅ RIGHT: Call check_api_http_registry first, get connection from results
 ```
 
+**Scenario 2: Registering Similar APIs**
+```
+User: "Register the FRED GDP endpoint"
+[You fetch FRED docs, register API]
+User: "Now register the FRED unemployment endpoint"
+❌ WRONG: Reusing auth_type="api_key" from your memory of previous FRED registration
+✅ RIGHT: Call fetch_api_documentation again, extract auth_type from fresh docs
+```
+
+**Scenario 3: After Registration**
+```
+[You just called register_api for "weather_api"]
+User: "Now get me the weather for NYC"
+❌ WRONG: Using "weather_api_connection" based on what you think was created
+✅ RIGHT: Call check_api_http_registry, use the EXACT connection_name from results
+```
+
 **Why this matters:**
-- APIs might have been deleted
-- Connection names might have changed
-- You might be wrong about what's registered
+- APIs might have been deleted between requests
+- Connection names might not match your assumptions
+- Documentation changes over time
+- You might misremember critical details like auth types
 - The registry is the source of truth, not your memory
 
 ---
@@ -128,11 +153,22 @@ execute_dbsql(
 
 **Only do this if Step 1 found NO matching API.**
 
+**⚠️ ANTI-HALLUCINATION CHECK: Did you ACTUALLY call `check_api_http_registry`?**
+- Don't assume it's not registered just because you don't remember it
+- If you haven't called `check_api_http_registry` in THIS turn, go back to Step 1
+- You must have real tool call results proving the API is not found
+
 ### Registration Workflow:
 
 #### 3a. Fetch API Documentation FIRST
 
 **MANDATORY: Always fetch documentation before registering!**
+
+**🚨 DO NOT use documentation from conversation history or memory!**
+- Even if you fetched docs 2 messages ago, fetch them AGAIN
+- Even if the user already showed you the docs, fetch them with the tool
+- Documentation might have changed
+- You might misremember key details
 
 ```python
 fetch_api_documentation(
@@ -140,13 +176,19 @@ fetch_api_documentation(
 )
 ```
 
-**Analyze the response to extract:**
+**Analyze the FRESH response you just received to extract:**
 - Base URL structure (host + base_path + api_path split)
 - Authentication type (none, api_key, bearer_token)
 - Required/optional parameters
 - HTTP method (GET, POST, etc.)
 
-#### 3b. Register the API with extracted details
+**❌ DO NOT use:**
+- Auth types you remember from earlier
+- Parameter schemas from conversation history
+- URL structures you saw previously
+- Your assumptions about how the API works
+
+#### 3b. Register the API with extracted details FROM THE DOCUMENTATION YOU JUST FETCHED
 
 ```python
 register_api(
@@ -184,6 +226,25 @@ register_api(
 ```
 
 #### 3c. After registration, go back to Step 1
+
+**🚨 CRITICAL: After registering, call `check_api_http_registry` again!**
+
+Why?
+- Verify the registration succeeded
+- Get the EXACT connection_name and api_path that were created
+- Don't assume what the connection will be named
+- The registry might have modified your inputs
+
+```python
+check_api_http_registry(...)  # Verify it's now there
+```
+
+Then use the EXACT values from this fresh check to call the API.
+
+**❌ DO NOT:**
+- Construct connection names from memory (e.g., "treasury_fx_rates_connection")
+- Assume the api_path matches what you registered
+- Skip this verification step
 
 Now the API is in the registry! Next time someone asks, it will be found in Step 1.
 
