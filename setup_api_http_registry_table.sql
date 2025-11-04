@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS {catalog}.{schema}.api_http_registry (
 
   -- Authentication configuration
   auth_type STRING NOT NULL COMMENT 'Authentication type: "none", "api_key", or "bearer_token"',
-  secret_scope STRING COMMENT 'Secret scope name (format: {api_name}_secrets), NULL for auth_type=none',
+  secret_scope STRING COMMENT 'Secret scope name: "mcp_api_keys" for api_key auth, "mcp_bearer_tokens" for bearer_token auth, NULL for auth_type=none',
 
   -- Request configuration
   http_method STRING DEFAULT 'GET',
