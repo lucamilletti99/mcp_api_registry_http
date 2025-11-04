@@ -123,14 +123,14 @@ export function ChatPageAgent({
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedWarehouseFilter(warehouseFilter);
-    }, 300);
+    }, 750);
     return () => clearTimeout(timer);
   }, [warehouseFilter]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedCatalogSchemaFilter(catalogSchemaFilter);
-    }, 300);
+    }, 750);
     return () => clearTimeout(timer);
   }, [catalogSchemaFilter]);
 
@@ -880,13 +880,17 @@ export function ChatPageAgent({
                   ) : (
                     <>
                       <div
-                        className={`prose prose-invert max-w-none ${message.content === "Thinking..." ? "typing-indicator" : ""}`}
+                        className={`prose ${isDark ? 'prose-invert' : 'prose-gray'} max-w-none break-words ${message.content === "Thinking..." ? "typing-indicator" : ""} ${
+                          isDark 
+                            ? "[&_a]:text-blue-400 [&_a]:underline [&_a:hover]:text-blue-300" 
+                            : "[&_a]:text-blue-600 [&_a]:underline [&_a:hover]:text-blue-700 [&_a]:font-medium"
+                        }`}
                         dangerouslySetInnerHTML={{
                           __html: DOMPurify.sanitize(
                             marked.parse(message.content, { breaks: true, gfm: true }) as string,
                             {
                               ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'a', 'code', 'pre', 'blockquote', 'span', 'div', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'hr', 'del', 'input'],
-                              ALLOWED_ATTR: ['href', 'target', 'class', 'style', 'type', 'checked', 'disabled']
+                              ALLOWED_ATTR: ['href', 'target', 'class', 'style', 'type', 'checked', 'disabled', 'rel']
                             }
                           )
                         }}
