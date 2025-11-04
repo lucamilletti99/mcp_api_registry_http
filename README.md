@@ -18,15 +18,52 @@ An API discovery and management platform that runs on Databricks Apps:
 
 ### Prerequisites
 
-**Workspace Requirements:**
-- Databricks Apps enabled (Public Preview)
-- Foundation Model API with a tool-enabled model endpoint
-- At least one SQL Warehouse ([create one](https://docs.databricks.com/en/compute/sql-warehouse/create.html))
-- Unity Catalog access
+#### Required Tools (Install on your local machine)
 
-**Local Machine:**
-- Python 3.12+ with `uv` package manager
-- Databricks CLI v0.260.0+
+**1. Python Package Manager - uv:**
+```bash
+# macOS/Linux
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Or with Homebrew
+brew install uv
+
+# Verify installation
+uv --version
+```
+[uv documentation](https://docs.astral.sh/uv/)
+
+**2. Databricks CLI:**
+```bash
+# With pip
+pip install databricks-cli
+
+# Or with Homebrew
+brew tap databricks/tap
+brew install databricks
+
+# Verify installation  
+databricks --version  # Should be v0.260.0+
+```
+[Databricks CLI documentation](https://docs.databricks.com/en/dev-tools/cli/index.html)
+
+**3. Bun (Optional - only for frontend development):**
+```bash
+# macOS/Linux
+curl -fsSL https://bun.sh/install | bash
+
+# Or with Homebrew
+brew install oven-sh/bun/bun
+```
+[Bun documentation](https://bun.sh/docs)
+
+#### Databricks Workspace Requirements
+
+Your workspace needs:
+- **Databricks Apps** enabled (Public Preview)
+- **Foundation Model API** with a tool-enabled model (Claude, Llama, etc.)
+- **SQL Warehouse** - At least one warehouse ([create one](https://docs.databricks.com/en/compute/sql-warehouse/create.html))
+- **Unity Catalog** - With a catalog and schema you can write to
 
 📖 **Detailed requirements:** [WORKSPACE_REQUIREMENTS.md](WORKSPACE_REQUIREMENTS.md)
 
@@ -68,57 +105,137 @@ cd mcp_api_registry_http
 ---
 
 ### Step 2: Create the API Registry Table
-**Note: Please create a catalog and schema prior to this step**
+
+Create the Delta table that stores API metadata:
+
 ```bash
 uv run python setup_table.py your_catalog your_schema
 ```
 
-Or manually run the SQL from `setup_api_http_registry_table.sql` in Databricks SQL Editor.
-
----
-
-### Step 3: Setup Secret Scopes (For Authenticated APIs)
-
-**Skip if you only use public APIs with no authentication.**
-
-For APIs with API keys or bearer tokens, you need a **one-time admin setup**:
-
+**Example:**
 ```bash
-./setup_shared_secrets.sh
-# When prompted, enter your app's service principal ID
+# Using the defaults from Step 1
+uv run python setup_table.py main default
 ```
 
 **What this does:**
-- Creates two shared scopes: `mcp_api_keys` and `mcp_bearer_tokens`
-- Grants your app's service principal WRITE access
-- That's it! Users can now register authenticated APIs through the app
+- Creates `api_http_registry` table in your specified catalog.schema
+- Table stores: API name, endpoints, auth type, HTTP connection details, parameters
+- Required for the app to track registered APIs
 
-**Where to find your service principal ID:**
-1. Go to Databricks workspace → Compute → Apps
-2. Click on your app → Look for "Service Principal ID"
+**Alternative - Manual SQL:**
+Run the SQL from `setup_api_http_registry_table.sql` in Databricks SQL Editor
 
-**Why this works:**
-- The app's service principal manages all secrets
-- No per-user permissions needed
-- Users interact through the app UI only
-
-📖 **Detailed guide:** [SECRETS_WORKAROUND.md](SECRETS_WORKAROUND.md)
+**Note:** Ensure your catalog and schema exist first. Create them in Databricks SQL Editor if needed.
 
 ---
 
-### Step 4: Deploy to Databricks
+### Step 3: Deploy to Databricks Apps
+
+Deploy your application code to Databricks:
 
 ```bash
-# First time:
+# First time deployment (creates the app)
 ./deploy.sh --create
 
-# Updates:
+# Future updates (after code changes)
 ./deploy.sh
 ```
 
-Your app will be at: `https://your-app-name.databricksapps.com`
+**During deployment, you'll be prompted for:**
+- **App name**: Must start with `mcp-` (e.g., `mcp-api-registry`, `mcp-prod-api`)
 
-**App Naming:** Must start with `mcp-` (e.g., `mcp-api-registry`, `mcp-prod-registry`)
+**What happens during deployment:**
+
+1. ✅ **Builds the frontend** - Compiles React TypeScript to static assets
+2. ✅ **Packages the backend** - Prepares FastAPI server and MCP tools  
+3. ✅ **Creates Databricks App** - Registers your app in the workspace
+4. ✅ **Generates Service Principal** - Automatically creates a service principal for your app
+5. ✅ **Deploys code** - Uploads and starts your application
+6. ✅ **Enables OAuth (OBO)** - Configures On-Behalf-Of authentication automatically
+
+**Finding your deployed app:**
+
+```bash
+# Get app URL and status
+./app_status.sh
+
+# Expected output:
+# App: mcp-api-registry
+# Status: RUNNING  
+# URL: https://adb-123456.10.azuredatabricks.net//apps/mcp-api-registry
+# Service Principal ID: 00000000-0000-0000-0000-000000000000
+```
+
+**Or in Databricks UI:**
+- Workspace → Compute → Apps → Click your app name
+
+**🔐 On-Behalf-Of (OBO) Authentication:**
+
+Databricks Apps automatically handles OAuth authentication:
+- ✅ Users log in through Databricks UI - no separate auth setup
+- ✅ All operations run with the user's permissions - proper access control
+- ✅ Full audit logging - track who did what
+- ✅ No manual OAuth configuration needed!
+
+The app configuration (`app.yaml`) specifies required scopes. When users access the app, they automatically get an OAuth token with their Databricks permissions.
+
+📖 **More details:** See `app.yaml` in the project root
+
+---
+
+### Step 4: Setup Secret Scopes (For Authenticated APIs)
+
+**⚠️ Important: Do this AFTER Step 3** - You need the Service Principal ID from deployment first!
+
+**Skip if you only use public APIs with no authentication.**
+
+For APIs requiring API keys or bearer tokens:
+
+```bash
+./setup_shared_secrets.sh
+```
+
+**When prompted, enter your app's Service Principal ID from Step 3.**
+
+**Where to find your Service Principal ID:**
+
+1. **From terminal:** Run `./app_status.sh` (shown in output)
+2. **From UI:** Databricks workspace → Compute → Apps → Click your app → "Service Principal ID"
+3. **Format:** Looks like `00000000-0000-0000-0000-000000000000`
+
+**What this script does:**
+
+1. Creates `mcp_api_keys` scope - for API key authentication
+2. Creates `mcp_bearer_tokens` scope - for bearer token authentication  
+3. Grants your app's service principal **WRITE** access to both scopes
+4. Verifies the permissions were set correctly
+
+**Why this is needed:**
+
+- API keys and bearer tokens must be stored securely
+- Databricks Secrets provide encryption at rest
+- The app's service principal manages secrets on behalf of all users
+- Users never see or handle raw credentials - they're encrypted automatically
+
+**Verification:**
+
+```bash
+# Check both scopes exist
+databricks secrets list-scopes | grep mcp_
+
+# Check service principal has WRITE access
+databricks secrets get-acl mcp_api_keys --principal YOUR_SPN_ID
+databricks secrets get-acl mcp_bearer_tokens --principal YOUR_SPN_ID
+
+# Expected output: permission: WRITE
+```
+
+**Troubleshooting:**
+- If scope creation fails: You may need admin permissions
+- If permission grant fails: Your SPN ID may be incorrect (check `./app_status.sh`)
+
+📖 **Detailed guide:** [SECRETS_WORKAROUND.md](SECRETS_WORKAROUND.md)
 
 ---
 
