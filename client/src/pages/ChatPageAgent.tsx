@@ -96,8 +96,10 @@ export function ChatPageAgent({
   const [selectedModel, setSelectedModel] = useState<string>("");
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [warehouseFilter, setWarehouseFilter] = useState<string>("");
+  const [debouncedWarehouseFilter, setDebouncedWarehouseFilter] = useState<string>("");
   const [catalogSchemas, setCatalogSchemas] = useState<CatalogSchema[]>([]);
   const [catalogSchemaFilter, setCatalogSchemaFilter] = useState<string>("");
+  const [debouncedCatalogSchemaFilter, setDebouncedCatalogSchemaFilter] = useState<string>("");
   const [tableValidation, setTableValidation] = useState<{
     exists: boolean;
     error?: string;
@@ -117,13 +119,28 @@ export function ChatPageAgent({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { theme } = useTheme();
 
-  // Filtered lists based on search
+  // Debounce filter updates (300ms delay)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedWarehouseFilter(warehouseFilter);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [warehouseFilter]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedCatalogSchemaFilter(catalogSchemaFilter);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [catalogSchemaFilter]);
+
+  // Filtered lists based on debounced search
   const filteredWarehouses = warehouses.filter((w) =>
-    w.name.toLowerCase().includes(warehouseFilter.toLowerCase())
+    w.name.toLowerCase().includes(debouncedWarehouseFilter.toLowerCase())
   );
 
   const filteredCatalogSchemas = catalogSchemas.filter((cs) =>
-    cs.full_name.toLowerCase().includes(catalogSchemaFilter.toLowerCase())
+    cs.full_name.toLowerCase().includes(debouncedCatalogSchemaFilter.toLowerCase())
   );
 
   useEffect(() => {
