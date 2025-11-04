@@ -131,7 +131,7 @@ export function ArchitecturePage() {
       title: 'Unity Catalog',
       icon: <Database className="h-10 w-10" />,
       front: 'Centralized data governance and storage',
-      back: 'Databricks Unity Catalog provides a unified governance solution. Stores the api_registry table with full audit logging, access control, and data lineage. Enables multi-catalog/schema deployment flexibility.',
+      back: 'Databricks Unity Catalog provides a unified governance solution. Stores the api_http_registry table and manages Unity Catalog HTTP Connections for secure API integration. Provides full audit logging, access control, and data lineage. Enables multi-catalog/schema deployment flexibility.',
       color: 'orange',
     },
     {
@@ -149,10 +149,10 @@ export function ArchitecturePage() {
       color: 'indigo',
     },
     {
-      title: 'API Registry Table',
+      title: 'HTTP Connections',
       icon: <Box className="h-10 w-10" />,
-      front: 'Delta table storing registered APIs',
-      back: 'Delta table in Unity Catalog that stores all registered API endpoints with metadata including name, description, authentication type, validation status, and usage history. Supports ACID transactions and time travel.',
+      front: 'Unity Catalog HTTP Connections for APIs',
+      back: 'Unity Catalog HTTP Connections provide secure, managed access to external APIs with built-in authentication (public, API key, bearer token). The api_http_registry table tracks connection metadata, parameters, and usage. HTTP connections support http_request() function for SQL-based API calls.',
       color: 'cyan',
     },
     {
@@ -300,7 +300,7 @@ export function ArchitecturePage() {
                 4
               </span>
               <p>
-                <strong>Data Operations:</strong> MCP tools execute SQL queries against the api_registry table in Unity Catalog using SQL Warehouse compute. All operations are tracked with MLflow tracing for observability and debugging.
+                <strong>Data Operations:</strong> MCP tools execute SQL queries against Unity Catalog to create HTTP Connections and call external APIs using http_request(). The api_http_registry table tracks all registered connections. All operations are tracked with MLflow tracing for observability and debugging.
               </p>
             </div>
             <div className="flex items-start gap-3">

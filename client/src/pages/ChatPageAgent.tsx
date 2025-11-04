@@ -532,7 +532,16 @@ export function ChatPageAgent({
             </SelectContent>
           </Select>
 
-          <Select value={selectedWarehouse} onValueChange={setSelectedWarehouse}>
+          <Select 
+            value={selectedWarehouse} 
+            onValueChange={(value) => {
+              setSelectedWarehouse(value);
+              setWarehouseFilter(""); // Clear filter on selection
+            }}
+            onOpenChange={(open) => {
+              if (!open) setWarehouseFilter(""); // Clear filter on close
+            }}
+          >
             <SelectTrigger className={`w-[200px] ${
               isDark
                 ? "bg-black/20 border-white/20 text-white"
@@ -579,7 +588,16 @@ export function ChatPageAgent({
           </Select>
 
           <div className="flex items-center gap-2">
-            <Select value={selectedCatalogSchema} onValueChange={setSelectedCatalogSchema}>
+            <Select 
+              value={selectedCatalogSchema} 
+              onValueChange={(value) => {
+                setSelectedCatalogSchema(value);
+                setCatalogSchemaFilter(""); // Clear filter on selection
+              }}
+              onOpenChange={(open) => {
+                if (!open) setCatalogSchemaFilter(""); // Clear filter on close
+              }}
+            >
               <SelectTrigger className={`w-[280px] ${
                 isDark
                   ? "bg-black/20 text-white"

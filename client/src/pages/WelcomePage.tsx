@@ -95,8 +95,8 @@ export function WelcomePage() {
             </h1>
           </div>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            A modern, full-stack application template with Python FastAPI
-            backend and React TypeScript frontend
+            AI-powered API registry leveraging Unity Catalog HTTP Connections
+            for secure external API integration via natural language
           </p>
         </div>
 
@@ -365,7 +365,7 @@ export function WelcomePage() {
                 MCP (Model Context Protocol) Server
               </CardTitle>
               <CardDescription>
-                This app includes an MCP server that exposes prompts and tools to Claude Code
+                This app provides an MCP server for discovering, registering, and calling external APIs using Unity Catalog HTTP Connections
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -386,16 +386,27 @@ export function WelcomePage() {
                 </code>
               </div>
 
-              <div className="flex items-center gap-4">
-                <Badge variant="outline">
-                  Transport: {mcpInfo.transport}
-                </Badge>
-                {mcpInfo.capabilities?.prompts && (
-                  <Badge variant="outline">Prompts ✓</Badge>
-                )}
-                {mcpInfo.capabilities?.tools && (
-                  <Badge variant="outline">Tools ✓</Badge>
-                )}
+              <div className="space-y-3">
+                <div className="flex items-center gap-4">
+                  <Badge variant="outline">
+                    Transport: {mcpInfo.transport}
+                  </Badge>
+                  {mcpInfo.capabilities?.prompts && (
+                    <Badge variant="outline">Prompts ✓</Badge>
+                  )}
+                  {mcpInfo.capabilities?.tools && (
+                    <Badge variant="outline">Tools ✓</Badge>
+                  )}
+                </div>
+                
+                <div className="text-sm text-muted-foreground">
+                  <p className="font-semibold mb-1">Key Tools:</p>
+                  <ul className="list-disc list-inside space-y-0.5 ml-2">
+                    <li>register_api - Create Unity Catalog HTTP Connections</li>
+                    <li>check_api_http_registry - Query registered APIs</li>
+                    <li>call_parameterized_api - Execute http_request() via SQL</li>
+                  </ul>
+                </div>
               </div>
 
               <Button asChild className="w-full">
@@ -622,7 +633,7 @@ export function WelcomePage() {
               href="http://localhost:8000/docs"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-blue-600 hover:underline"
+              className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
             >
               API documentation
             </a>{" "}
