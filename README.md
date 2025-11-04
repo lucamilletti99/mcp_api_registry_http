@@ -52,7 +52,7 @@ This installs dependencies, configures Databricks CLI, and creates `.env.local` 
 uv run python setup_table.py your_catalog your_schema
 ```
 
-Or manually run the SQL from `setup_api_registry_table.sql` in Databricks SQL Editor.
+Or manually run the SQL from `setup_api_http_registry_table.sql` in Databricks SQL Editor.
 
 ---
 

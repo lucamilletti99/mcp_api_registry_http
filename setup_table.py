@@ -18,7 +18,7 @@ except ImportError:
     pass  # python-dotenv not required
 
 def setup_api_registry_table(catalog: str, schema: str, warehouse_id: str = None):
-    """Create the api_registry table in the specified catalog.schema.
+    """Create the api_http_registry table in the specified catalog.schema.
 
     Args:
         catalog: Catalog name (e.g., 'luca_milletti')
@@ -85,12 +85,12 @@ def setup_api_registry_table(catalog: str, schema: str, warehouse_id: str = None
             if statement:
                 statements.append(statement)
 
-    print(f"\n📝 Creating api_registry table in {catalog}.{schema}...")
+    print(f"\n📝 Creating api_http_registry table in {catalog}.{schema}...")
     print(f"🔧 Using SQL warehouse: {warehouse_id}")
     print(f"📄 Found {len(statements)} SQL statement(s) to execute\n")
 
     if len(statements) == 0:
-        print("❌ No SQL statements found in setup_api_registry_table.sql")
+        print("❌ No SQL statements found in setup_api_http_registry_table.sql")
         print(f"   SQL file location: {sql_file}")
         sys.exit(1)
 
@@ -127,7 +127,7 @@ def setup_api_registry_table(catalog: str, schema: str, warehouse_id: str = None
 
     # Verify table was created
     print("🔍 Verifying table creation...")
-    verify_query = f"DESCRIBE TABLE {catalog}.{schema}.api_registry"
+    verify_query = f"DESCRIBE TABLE {catalog}.{schema}.api_http_registry"
 
     try:
         print(f"   Running: {verify_query}")
@@ -140,7 +140,7 @@ def setup_api_registry_table(catalog: str, schema: str, warehouse_id: str = None
         print(f"   Query status: {result.status.state}")
 
         if result.status.state == StatementState.SUCCEEDED:
-            print(f"✅ Table {catalog}.{schema}.api_registry created successfully!\n")
+            print(f"✅ Table {catalog}.{schema}.api_http_registry created successfully!\n")
 
             # Show table structure
             if result.result and result.result.data_array:
@@ -150,13 +150,13 @@ def setup_api_registry_table(catalog: str, schema: str, warehouse_id: str = None
                     col_type = row[1] if len(row) > 1 else ''
                     print(f"  - {col_name}: {col_type}")
 
-            print(f"\n🎉 Setup complete! You can now use {catalog}.{schema}.api_registry")
+            print(f"\n🎉 Setup complete! You can now use {catalog}.{schema}.api_http_registry")
             return True
         else:
             error_msg = result.status.error.message if result.status.error else 'Unknown error'
             print(f"⚠️  Verification query did not succeed: {error_msg}")
             print(f"   The table may have been created but verification failed.")
-            print(f"   Try running: DESCRIBE TABLE {catalog}.{schema}.api_registry")
+            print(f"   Try running: DESCRIBE TABLE {catalog}.{schema}.api_http_registry")
             return False
 
     except Exception as e:
@@ -166,7 +166,7 @@ def setup_api_registry_table(catalog: str, schema: str, warehouse_id: str = None
         print(f"   2. You don't have permissions to describe the table")
         print(f"   3. The warehouse is slow to respond")
         print(f"\n💡 Try checking manually in Databricks:")
-        print(f"   SELECT * FROM {catalog}.{schema}.api_registry LIMIT 1;")
+        print(f"   SELECT * FROM {catalog}.{schema}.api_http_registry LIMIT 1;")
         return False
 
 
