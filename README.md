@@ -39,10 +39,31 @@ Run this on your **local machine** (not in Databricks):
 ```bash
 git clone https://github.com/lucamilletti99/mcp_api_registry_http.git
 cd mcp_api_registry_http
-./setup.sh  # Interactive - press Enter to use defaults
+./setup.sh
 ```
 
-This installs dependencies, configures Databricks CLI, and creates `.env.local` with your settings.
+**The setup script will prompt you for:**
+
+| Prompt | What It's For | Default | Notes |
+|--------|---------------|---------|-------|
+| **Databricks Host** | Your workspace URL | (no default) | Format: `https://your-workspace.cloud.databricks.com` |
+| **Authentication Method** | How to authenticate | `2` (PAT - **Recommended**) | Options: 1=OAuth, 2=PAT |
+| **Personal Access Token** | Your Databricks PAT | (no default) | Required for PAT auth. [Get your PAT here](https://docs.databricks.com/en/dev-tools/auth/pat.html) |
+| **SQL Warehouse ID** | Warehouse for queries | Auto-detects first warehouse | Press Enter to use default |
+| **Unity Catalog** | Target catalog | `main` | Press Enter to use default |
+| **Unity Schema** | Target schema | `default` | Press Enter to use default |
+
+**⚠️ Important: Use Personal Access Token (PAT) authentication**
+- PAT is the recommended method for local development
+- OAuth is experimental and may have issues
+- Get your PAT: Workspace → Settings → Developer → Access Tokens → Generate New Token
+- [Full PAT documentation](https://docs.databricks.com/en/dev-tools/auth/pat.html)
+
+**What this does:**
+- Installs Python and JavaScript dependencies
+- Configures Databricks CLI authentication  
+- Creates `.env.local` with your configuration
+- Validates your workspace connection
 
 ---
 
