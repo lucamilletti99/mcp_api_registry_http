@@ -239,23 +239,150 @@ export function PromptsPage() {
             No MCP tools found.
           </div>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-8">
-            {mcpTools.map((tool) => (
-              <Card key={tool.name}>
-                <CardHeader>
-                  <CardTitle className="text-lg">{tool.name}</CardTitle>
-                  <CardDescription className="whitespace-pre-line">
-                    {tool.description}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground">
-                    Available as MCP tool
-                  </p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          <>
+            {/* Core API Management Tools */}
+            <div className="mb-8">
+              <h3 className={`text-xl font-semibold mb-3 ${isDark ? "text-white/90" : "text-gray-800"}`}>
+                🎯 Core API Management
+              </h3>
+              <p className={`text-sm mb-4 ${isDark ? "text-white/60" : "text-gray-600"}`}>
+                Main tools for discovering, registering, and calling external APIs via Unity Catalog HTTP Connections
+              </p>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {mcpTools
+                  .filter((tool) =>
+                    [
+                      "register_api",
+                      "check_api_http_registry",
+                      "call_parameterized_api",
+                      "fetch_api_documentation",
+                    ].includes(tool.name)
+                  )
+                  .map((tool) => (
+                    <Card key={tool.name} className={isDark ? "bg-blue-900/20 border-blue-500/30" : "bg-blue-50 border-blue-200"}>
+                      <CardHeader>
+                        <CardTitle className="text-lg">{tool.name}</CardTitle>
+                        <CardDescription className="whitespace-pre-line">
+                          {tool.description}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-sm text-muted-foreground">
+                          Available as MCP tool
+                        </p>
+                      </CardContent>
+                    </Card>
+                  ))}
+              </div>
+            </div>
+
+            {/* Connection Management Tools */}
+            <div className="mb-8">
+              <h3 className={`text-xl font-semibold mb-3 ${isDark ? "text-white/90" : "text-gray-800"}`}>
+                🔌 HTTP Connection Management
+              </h3>
+              <p className={`text-sm mb-4 ${isDark ? "text-white/60" : "text-gray-600"}`}>
+                Tools for managing Unity Catalog HTTP Connections
+              </p>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {mcpTools
+                  .filter((tool) =>
+                    [
+                      "list_http_connections",
+                      "test_http_connection",
+                      "delete_http_connection",
+                    ].includes(tool.name)
+                  )
+                  .map((tool) => (
+                    <Card key={tool.name}>
+                      <CardHeader>
+                        <CardTitle className="text-lg">{tool.name}</CardTitle>
+                        <CardDescription className="whitespace-pre-line">
+                          {tool.description}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-sm text-muted-foreground">
+                          Available as MCP tool
+                        </p>
+                      </CardContent>
+                    </Card>
+                  ))}
+              </div>
+            </div>
+
+            {/* System & Databricks Tools */}
+            <div className="mb-8">
+              <h3 className={`text-xl font-semibold mb-3 ${isDark ? "text-white/90" : "text-gray-800"}`}>
+                ⚙️ System & Databricks Utilities
+              </h3>
+              <p className={`text-sm mb-4 ${isDark ? "text-white/60" : "text-gray-600"}`}>
+                General Databricks workspace and system tools
+              </p>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {mcpTools
+                  .filter((tool) =>
+                    [
+                      "health",
+                      "execute_dbsql",
+                      "list_warehouses",
+                      "list_dbfs_files",
+                    ].includes(tool.name)
+                  )
+                  .map((tool) => (
+                    <Card key={tool.name} className={isDark ? "bg-white/5" : "bg-gray-50"}>
+                      <CardHeader>
+                        <CardTitle className="text-lg">{tool.name}</CardTitle>
+                        <CardDescription className="whitespace-pre-line">
+                          {tool.description}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-sm text-muted-foreground">
+                          Available as MCP tool
+                        </p>
+                      </CardContent>
+                    </Card>
+                  ))}
+              </div>
+            </div>
+
+            {/* Advanced/Alternative Tools (collapsed by default) */}
+            <details className="mb-4">
+              <summary className={`cursor-pointer text-lg font-semibold mb-3 ${isDark ? "text-white/70 hover:text-white/90" : "text-gray-600 hover:text-gray-800"}`}>
+                🔧 Advanced & Alternative Tools (click to expand)
+              </summary>
+              <p className={`text-sm mb-4 ${isDark ? "text-white/60" : "text-gray-600"}`}>
+                Advanced tools and alternative registration methods. Most users won't need these.
+              </p>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {mcpTools
+                  .filter((tool) =>
+                    [
+                      "register_api_with_connection",
+                      "call_registered_api",
+                      "discover_api_endpoint",
+                      "smart_register_with_connection",
+                    ].includes(tool.name)
+                  )
+                  .map((tool) => (
+                    <Card key={tool.name} className={isDark ? "bg-white/5 opacity-75" : "bg-gray-50 opacity-75"}>
+                      <CardHeader>
+                        <CardTitle className="text-lg">{tool.name}</CardTitle>
+                        <CardDescription className="whitespace-pre-line">
+                          {tool.description}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-sm text-muted-foreground">
+                          Available as MCP tool
+                        </p>
+                      </CardContent>
+                    </Card>
+                  ))}
+              </div>
+            </details>
+          </>
         )}
       </div>
 
