@@ -188,8 +188,7 @@ async def list_schemas(catalog_name: str, request: Request) -> Dict[str, Any]:
 async def list_all_catalog_schemas(
     request: Request,
     limit: int = 100,
-    search: str = None,
-    filter_by_permissions: bool = True
+    search: str = None
 ) -> Dict[str, Any]:
     """List catalog.schema combinations available in the workspace.
 
@@ -199,17 +198,20 @@ async def list_all_catalog_schemas(
     Args:
         limit: Maximum number of results to return (default: 100, helps with performance)
         search: Optional search filter (case-insensitive, matches catalog or schema name)
-        filter_by_permissions: Only show schemas where user can create tables (default: True)
 
     Returns:
         Dictionary with list of catalog.schema combinations
+        
+    Note:
+        Permission filtering removed for performance - individual schema permission checks
+        were too slow (N API calls for N schemas). The API will return permission errors
+        when user tries to use a schema they don't have access to.
     """
     try:
         w = get_workspace_client(request)
 
         catalog_schemas = []
         search_lower = search.lower() if search else None
-        skipped_permission_count = 0
 
         # Iterate through all catalogs
         for catalog in w.catalogs.list():
@@ -232,38 +234,21 @@ async def list_all_catalog_schemas(
                     if search_lower and search_lower not in full_name.lower():
                         continue
                     
-                    # Permission check: Try to list tables to verify user has CREATE access
-                    # If user can list tables, they likely have sufficient permissions
-                    has_permissions = True
-                    if filter_by_permissions:
-                        try:
-                            # Quick permission check - try to get schema info
-                            # This will fail if user doesn't have USE CATALOG + USE SCHEMA
-                            w.schemas.get(full_name=full_name)
-                            # Optionally: Try listing tables as a more thorough check
-                            # list(w.tables.list(catalog_name=catalog_name, schema_name=schema_name, max_results=1))
-                        except Exception as perm_error:
-                            # User doesn't have permissions on this schema
-                            has_permissions = False
-                            skipped_permission_count += 1
-                            continue
-                    
-                    if has_permissions:
-                        catalog_schemas.append(
-                            CatalogSchema(
-                                catalog_name=catalog_name,
-                                schema_name=schema_name,
-                                full_name=full_name,
-                                comment=schema.comment if hasattr(schema, 'comment') else None,
-                            )
+                    catalog_schemas.append(
+                        CatalogSchema(
+                            catalog_name=catalog_name,
+                            schema_name=schema_name,
+                            full_name=full_name,
+                            comment=schema.comment if hasattr(schema, 'comment') else None,
                         )
+                    )
                     
                     # Stop if we hit the limit
                     if len(catalog_schemas) >= limit:
                         break
                         
             except Exception as e:
-                # Skip catalogs that can't be accessed
+                # Skip catalogs that can't be accessed (permission denied)
                 print(f'Warning: Could not list schemas for catalog {catalog_name}: {str(e)}')
                 continue
             
@@ -274,18 +259,12 @@ async def list_all_catalog_schemas(
         total_count = len(catalog_schemas)
         has_more = total_count == limit
         
-        result = {
+        return {
             'catalog_schemas': [cs.model_dump() for cs in catalog_schemas],
             'count': total_count,
             'has_more': has_more,
             'limit': limit
         }
-        
-        if filter_by_permissions and skipped_permission_count > 0:
-            result['filtered_count'] = skipped_permission_count
-            print(f'ℹ️ Filtered out {skipped_permission_count} schemas due to insufficient permissions')
-        
-        return result
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f'Failed to list catalog schemas: {str(e)}')
