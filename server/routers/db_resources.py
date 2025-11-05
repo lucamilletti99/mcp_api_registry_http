@@ -236,8 +236,9 @@ async def validate_api_registry_table(catalog: str, schema: str, warehouse_id: s
         # Build table name
         table_name = f'{catalog}.{schema}.api_http_registry'
 
-        # Try to query the table with LIMIT 0 to check existence without fetching data
-        query = f'SELECT * FROM {table_name} LIMIT 0'
+        # Use DESCRIBE TABLE to check existence - this only reads metadata, not storage
+        # Avoids Azure storage authorization issues with SELECT queries
+        query = f'DESCRIBE TABLE {table_name}'
 
         print(f'🔍 Validating table existence: {table_name}')
 
