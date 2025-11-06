@@ -446,9 +446,13 @@ export function ChatPageAgent({
 
       // Check if response contains markers
       const responseText = data.response;
+      console.log("🔍 [DEBUG] Full response text:", responseText);
+      
       const needsApiKey = responseText.includes("[CREDENTIAL_REQUEST:API_KEY]");
       const needsBearerToken = responseText.includes("[CREDENTIAL_REQUEST:BEARER_TOKEN]");
       const hasEndpointOptions = responseText.includes("[ENDPOINT_OPTIONS:");
+      
+      console.log("🔍 [DEBUG] Marker detection:", { needsApiKey, needsBearerToken, hasEndpointOptions });
       
       // Extract API name if mentioned (look for it in the response)
       let apiName = "";
@@ -460,34 +464,84 @@ export function ChatPageAgent({
       // Extract endpoint options information if present
       let endpoints: Array<{path: string; description: string; method: string}> = [];
       let registrationData: any = null;
-      const endpointOptionsMatch = responseText.match(/\[ENDPOINT_OPTIONS:(\{.*?\})\]/);
-      if (endpointOptionsMatch) {
-        try {
-          const optionsData = JSON.parse(endpointOptionsMatch[1]);
-          if (optionsData.endpoints && Array.isArray(optionsData.endpoints)) {
-            endpoints = optionsData.endpoints;
-            registrationData = {
-              api_name: optionsData.api_name,
-              host: optionsData.host,
-              base_path: optionsData.base_path,
-              auth_type: optionsData.auth_type,
-            };
-            // Use auth_type from data if API name not found in text
-            if (!apiName && optionsData.api_name) {
-              apiName = optionsData.api_name.replace(/_/g, ' ');
+      
+      // Extract JSON by finding balanced braces
+      // This handles nested objects/arrays properly
+      const markerStart = responseText.indexOf("[ENDPOINT_OPTIONS:");
+      if (markerStart !== -1) {
+        const jsonStart = responseText.indexOf("{", markerStart);
+        if (jsonStart !== -1) {
+          // Find the matching closing brace by counting
+          let braceCount = 0;
+          let jsonEnd = jsonStart;
+          for (let i = jsonStart; i < responseText.length; i++) {
+            if (responseText[i] === '{') braceCount++;
+            if (responseText[i] === '}') braceCount--;
+            if (braceCount === 0) {
+              jsonEnd = i + 1;
+              break;
             }
           }
-        } catch (e) {
-          console.error("Failed to parse endpoint options data:", e);
+          
+          const jsonStr = responseText.substring(jsonStart, jsonEnd);
+          console.log("🔍 [DEBUG] Extracted JSON (first 200 chars):", jsonStr.substring(0, 200));
+          
+          try {
+            const optionsData = JSON.parse(jsonStr);
+            console.log("🔍 [DEBUG] Parsed options data:", optionsData);
+            
+            if (optionsData.endpoints && Array.isArray(optionsData.endpoints)) {
+              endpoints = optionsData.endpoints;
+              registrationData = {
+                api_name: optionsData.api_name,
+                host: optionsData.host,
+                base_path: optionsData.base_path,
+                auth_type: optionsData.auth_type,
+              };
+              console.log("🔍 [DEBUG] Found endpoints:", endpoints.length, "Auth type:", optionsData.auth_type);
+              // Use auth_type from data if API name not found in text
+              if (!apiName && optionsData.api_name) {
+                apiName = optionsData.api_name.replace(/_/g, ' ');
+              }
+            }
+          } catch (e) {
+            console.error("❌ [ERROR] Failed to parse endpoint options data:", e);
+            console.error("❌ [ERROR] Raw JSON:", jsonStr);
+          }
         }
+      } else {
+        console.log("⚠️ [WARN] No ENDPOINT_OPTIONS marker found in response");
       }
 
       // Remove the markers from the displayed message
       let displayedResponse = responseText
         .replace(/\[CREDENTIAL_REQUEST:API_KEY\]/g, "")
-        .replace(/\[CREDENTIAL_REQUEST:BEARER_TOKEN\]/g, "")
-        .replace(/\[ENDPOINT_OPTIONS:\{.*?\}\]/g, "")
-        .trim();
+        .replace(/\[CREDENTIAL_REQUEST:BEARER_TOKEN\]/g, "");
+      
+      // Remove ENDPOINT_OPTIONS with balanced brace matching
+      const removeMarkerStart = displayedResponse.indexOf("[ENDPOINT_OPTIONS:");
+      if (removeMarkerStart !== -1) {
+        const removeJsonStart = displayedResponse.indexOf("{", removeMarkerStart);
+        if (removeJsonStart !== -1) {
+          let braceCount = 0;
+          let removeJsonEnd = removeJsonStart;
+          for (let i = removeJsonStart; i < displayedResponse.length; i++) {
+            if (displayedResponse[i] === '{') braceCount++;
+            if (displayedResponse[i] === '}') braceCount--;
+            if (braceCount === 0) {
+              removeJsonEnd = i + 1;
+              break;
+            }
+          }
+          // Check if there's a closing ] after the }
+          if (displayedResponse[removeJsonEnd] === ']') {
+            removeJsonEnd++;
+          }
+          displayedResponse = displayedResponse.substring(0, removeMarkerStart) + displayedResponse.substring(removeJsonEnd);
+        }
+      }
+      
+      displayedResponse = displayedResponse.trim();
 
       // Add the assistant's response
       setMessages((prev) => [
