@@ -139,7 +139,7 @@ async def call_foundation_model(
     messages: List[Dict[str, str]],
     model: str,
     tools: Optional[List[Dict]] = None,
-    max_tokens: int = 4096,
+    max_tokens: int = 16384,  # Increased to allow full JSON marker generation (was 4096)
     request: Request = None
 ) -> Dict[str, Any]:
     """Call a Databricks Foundation Model.
