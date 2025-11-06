@@ -308,27 +308,87 @@ async def delete_api(
         # Build fully-qualified table name with proper backtick quoting
         table_name = f'`{catalog}`.`{schema}`.`api_http_registry`'
 
-        # Delete query
-        query = f"""
+        # Step 1: Get the connection_name before deleting the registry entry
+        get_connection_query = f"""
+        SELECT connection_name
+        FROM {table_name}
+        WHERE api_id = '{api_id}'
+        """
+
+        get_statement = ws.statement_execution.execute_statement(
+            warehouse_id=warehouse_id,
+            statement=get_connection_query,
+            wait_timeout='30s'
+        )
+
+        if get_statement.status.state != StatementState.SUCCEEDED:
+            raise HTTPException(
+                status_code=500,
+                detail=f'Failed to retrieve connection name: {get_statement.status.state}'
+            )
+
+        # Extract connection_name from results
+        connection_name = None
+        if get_statement.result and get_statement.result.data_array:
+            for row in get_statement.result.data_array:
+                if row and len(row) > 0:
+                    connection_name = row[0]
+                    break
+
+        # Step 2: Delete the registry entry
+        delete_query = f"""
         DELETE FROM {table_name}
         WHERE api_id = '{api_id}'
         """
 
-        # Execute delete
-        statement = ws.statement_execution.execute_statement(
+        delete_statement = ws.statement_execution.execute_statement(
             warehouse_id=warehouse_id,
-            statement=query,
+            statement=delete_query,
             wait_timeout='30s'
         )
 
-        if statement.status.state != StatementState.SUCCEEDED:
+        if delete_statement.status.state != StatementState.SUCCEEDED:
             raise HTTPException(
                 status_code=500,
-                detail=f'Delete failed: {statement.status.state}'
+                detail=f'Delete from registry failed: {delete_statement.status.state}'
             )
 
-        return {"message": "API deleted successfully"}
+        # Step 3: Drop the HTTP connection if we found one
+        if connection_name:
+            drop_connection_query = f"""
+            DROP CONNECTION IF EXISTS `{catalog}`.`{schema}`.`{connection_name}`
+            """
 
+            try:
+                drop_statement = ws.statement_execution.execute_statement(
+                    warehouse_id=warehouse_id,
+                    statement=drop_connection_query,
+                    wait_timeout='30s'
+                )
+
+                if drop_statement.status.state == StatementState.SUCCEEDED:
+                    print(f"✅ Dropped HTTP connection: {connection_name}")
+                    return {
+                        "message": "API and HTTP connection deleted successfully",
+                        "connection_deleted": True
+                    }
+                else:
+                    print(f"⚠️  Failed to drop connection {connection_name}: {drop_statement.status.state}")
+                    return {
+                        "message": "API deleted, but HTTP connection deletion failed",
+                        "connection_deleted": False
+                    }
+            except Exception as drop_error:
+                print(f"⚠️  Error dropping connection {connection_name}: {drop_error}")
+                return {
+                    "message": "API deleted, but HTTP connection deletion failed",
+                    "connection_deleted": False
+                }
+        else:
+            return {"message": "API deleted successfully (no connection found)"}
+
+    except HTTPException:
+        raise
     except Exception as e:
         print(f"Failed to delete API: {e}")
         raise HTTPException(
