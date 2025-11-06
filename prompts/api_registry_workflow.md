@@ -53,6 +53,23 @@ About to call: execute_dbsql(query="SELECT http_request(conn => 'fred_connection
 
 ---
 
+## 🚨 BEFORE FINISHING YOUR RESPONSE: MARKER CHECKLIST 🚨
+
+**If you just called `fetch_api_documentation`, answer these:**
+
+```
+□ Did I literally type [ENDPOINT_OPTIONS:{...}] in my response?
+□ Did I include valid JSON with api_name, host, base_path, auth_type, endpoints?
+□ If auth_type is "api_key" or "bearer_token", did I type [CREDENTIAL_REQUEST:...]?
+□ Are these markers at the END of my response, after the human-readable text?
+```
+
+**IF YOU ANSWERED "NO" TO ANY: Add the markers NOW before finishing!**
+
+**WITHOUT MARKERS → Dialog won't show → User stuck → Registration fails!**
+
+---
+
 ## 🚨 MANDATORY WORKFLOW FOR EVERY REQUEST 🚨
 
 **You have ONE job: Check registry → Call API → Done**
@@ -824,8 +841,16 @@ Analyze the response to determine if it needs `api_key` or `bearer_token`.
 
 #### Step 3: Show Available Endpoints (Always) + Request Credential (If Required)
 
-**CRITICAL: ALWAYS show endpoint selection via [ENDPOINT_OPTIONS] marker!**
-**ONLY include credential request markers if authentication is required!**
+**🚨 CRITICAL: YOU MUST OUTPUT MARKERS IN YOUR RESPONSE TEXT! 🚨**
+
+**MANDATORY: Your response MUST end with these markers (literal text in your message):**
+1. **ALWAYS include** `[ENDPOINT_OPTIONS:{...}]` with JSON data
+2. **IF authenticated** include `[CREDENTIAL_REQUEST:API_KEY]` or `[CREDENTIAL_REQUEST:BEARER_TOKEN]`
+
+**These are NOT comments or instructions - they are LITERAL TEXT you must output!**
+**The frontend JavaScript parses these markers to show the dialog!**
+
+**Without these markers → No dialog appears → User cannot proceed!**
 
 **Scenario A: Public API (auth_type="none") - No Credential Needed:**
 ```
@@ -885,10 +910,15 @@ Please provide your bearer token for GitHub.
 
 **🚨 CRITICAL FORMAT RULES:**
 - Always list 2-5 most useful endpoints from the documentation
-- Include the `[ENDPOINT_OPTIONS:{...}]` marker with full registration data
+- **YOU MUST LITERALLY TYPE** the `[ENDPOINT_OPTIONS:{...}]` marker in your response
+- **YOU MUST LITERALLY TYPE** the `[CREDENTIAL_REQUEST:...]` marker if auth is needed
 - JSON must be valid and on a single line
 - Must include: api_name, host, base_path, auth_type, endpoints array
 - Each endpoint needs: path, description, method, params (optional)
+
+**⚠️ COMMON MISTAKE: Describing endpoints without including the markers!**
+**The markers are not suggestions - they are REQUIRED literal text in your response!**
+**Copy-paste the exact format from the examples above, including the square brackets!**
 
 #### Step 4: User Selects Endpoints (and Provides Credential if Required)
 
