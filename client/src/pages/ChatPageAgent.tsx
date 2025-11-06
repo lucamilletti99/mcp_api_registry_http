@@ -424,16 +424,41 @@ export function ChatPageAgent({
         return;
       }
 
+      // Check if response contains credential request markers
+      const responseText = data.response;
+      const needsApiKey = responseText.includes("[CREDENTIAL_REQUEST:API_KEY]");
+      const needsBearerToken = responseText.includes("[CREDENTIAL_REQUEST:BEARER_TOKEN]");
+      
+      // Extract API name if mentioned (look for it in the response)
+      let apiName = "";
+      const apiNameMatch = responseText.match(/for\s+([A-Za-z0-9_\s-]+?)[\.\n\[]|provide your (?:API key|bearer token) for ([A-Za-z0-9_\s-]+)/i);
+      if (apiNameMatch) {
+        apiName = (apiNameMatch[1] || apiNameMatch[2] || "").trim();
+      }
+
+      // Remove the marker from the displayed message
+      let displayedResponse = responseText
+        .replace(/\[CREDENTIAL_REQUEST:API_KEY\]/g, "")
+        .replace(/\[CREDENTIAL_REQUEST:BEARER_TOKEN\]/g, "")
+        .trim();
+
       // Add the assistant's response
       setMessages((prev) => [
         ...prev,
         {
           role: "assistant",
-          content: data.response,
+          content: displayedResponse,
           tool_calls: data.tool_calls, // Show which tools were used
           trace_id: data.trace_id, // MLflow trace ID for "View Trace" link
         },
       ]);
+
+      // Show credential dialog if credentials are needed
+      if (needsApiKey || needsBearerToken) {
+        setCredentialType(needsBearerToken ? "bearer_token" : "api_key");
+        setPendingApiName(apiName);
+        setShowCredentialDialog(true);
+      }
 
     } catch (error) {
       console.error("Failed to send message:", error);
@@ -1547,11 +1572,17 @@ export function ChatPageAgent({
                     return;
                   }
 
+                  // Strip any credential markers from response
+                  const cleanedResponse = data.response
+                    .replace(/\[CREDENTIAL_REQUEST:API_KEY\]/g, "")
+                    .replace(/\[CREDENTIAL_REQUEST:BEARER_TOKEN\]/g, "")
+                    .trim();
+
                   setMessages((prev) => [
                     ...prev,
                     {
                       role: "assistant",
-                      content: data.response,
+                      content: cleanedResponse,
                       tool_calls: data.tool_calls,
                       trace_id: data.trace_id,
                     },
