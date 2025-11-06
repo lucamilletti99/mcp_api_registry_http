@@ -108,10 +108,11 @@ After fetching documentation, show endpoints and request credential:
 **Public API (auth_type="none"):**
 ```
 📡 Available base paths:
-- /v1/accounting - Accounting data
-- /v1/debt - Public debt data
+- /v1/accounting - Accounting data (v1)
+- /v2/accounting - Accounting data (v2)
+- /v1/debt - Debt-related data
 
-[ENDPOINT_OPTIONS:{"api_name":"treasury_api","host":"api.fiscaldata.treasury.gov","base_path":"/services/api","auth_type":"none","endpoints":[{"path":"/v1/accounting","description":"Accounting data","method":"GET"},{"path":"/v1/debt","description":"Debt data","method":"GET"}]}]
+[ENDPOINT_OPTIONS:{"api_name":"treasury_fiscal_data","host":"api.fiscaldata.treasury.gov","base_path":"/services/api/fiscal_service","auth_type":"none","endpoints":[{"path":"/v1/accounting","description":"Accounting data v1","method":"GET"},{"path":"/v2/accounting","description":"Accounting data v2","method":"GET"},{"path":"/v1/debt","description":"Debt data","method":"GET"}]}]
 ```
 
 **Authenticated API:**
@@ -131,7 +132,10 @@ Please provide your API key.
 **🚨 CRITICAL MARKER RULES:**
 - **YOU MUST LITERALLY TYPE** `[ENDPOINT_OPTIONS:{...}]` in your response
 - **YOU MUST LITERALLY TYPE** `[CREDENTIAL_REQUEST:...]` if auth needed
-- Use **BASE paths** only (e.g., `/repos` not `/repos/{owner}/{repo}/commits`)
+- Use **SHORT BASE paths** only - 1-3 segments max!
+  - ✅ GOOD: `/repos`, `/user`, `/v1/accounting`, `/v2/debt`
+  - ❌ BAD: `/v1/accounting/od/rates_of_exchange`, `/repos/{owner}/{repo}/commits`
+  - **RULE**: If a path has more than 3 segments (/ slashes), it's TOO DETAILED!
 - JSON must be valid and on one line
 
 **Without markers → Dialog won't show → Registration fails!**
