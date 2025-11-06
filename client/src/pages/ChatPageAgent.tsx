@@ -427,13 +427,32 @@ export function ChatPageAgent({
         }),
       });
 
+      if (!response.ok) {
+        // Handle HTTP errors
+        const errorData = await response.json().catch(() => ({ detail: "Unknown error" }));
+        console.error("❌ [ERROR] API request failed:", response.status, errorData);
+        
+        // Remove the temporary "thinking" message
+        setMessages((prev) => prev.slice(0, -1));
+        
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "assistant",
+            content: `Error: ${errorData.detail || "Request failed"}`,
+          },
+        ]);
+        return;
+      }
+
       const data = await response.json();
 
       // Remove the temporary "thinking" message
       setMessages((prev) => prev.slice(0, -1));
 
-      // Check for API errors
+      // Check for API errors in successful response
       if (data.detail) {
+        console.error("❌ [ERROR] Error in response data:", data.detail);
         setMessages((prev) => [
           ...prev,
           {
@@ -1723,13 +1742,15 @@ export function ChatPageAgent({
                 if (requiresAuth && !credentialValue.trim()) return;
                 
                 // SECURE: Store credential in session state, NOT in message content!
-                // Only store if auth is required
+                // Build updated credentials object
+                const updatedCredentials = requiresAuth ? {
+                  ...storedCredentials,
+                  [credentialType]: credentialValue,
+                } : storedCredentials;
+                
+                // Only update state if auth is required
                 if (requiresAuth) {
-                  const newCredentials = {
-                    ...storedCredentials,
-                    [credentialType]: credentialValue,
-                  };
-                  setStoredCredentials(newCredentials);
+                  setStoredCredentials(updatedCredentials);
                 }
                 
                 setShowCredentialDialog(false);
@@ -1774,14 +1795,31 @@ export function ChatPageAgent({
                       warehouse_id: selectedWarehouse || undefined,
                       catalog_schema: selectedCatalogSchema || undefined,
                       // Pass credentials as metadata, NOT in message content!
-                      credentials: newCredentials,
+                      credentials: updatedCredentials,
                     }),
                   });
+
+                  if (!response.ok) {
+                    // Handle HTTP errors
+                    const errorData = await response.json().catch(() => ({ detail: "Unknown error" }));
+                    console.error("❌ [ERROR] API request failed:", response.status, errorData);
+                    
+                    setMessages((prev) => prev.slice(0, -1));
+                    setMessages((prev) => [
+                      ...prev,
+                      {
+                        role: "assistant",
+                        content: `Error: ${errorData.detail || "Request failed"}`,
+                      },
+                    ]);
+                    return;
+                  }
 
                   const data = await response.json();
                   setMessages((prev) => prev.slice(0, -1));
 
                   if (data.detail) {
+                    console.error("❌ [ERROR] Error in response data:", data.detail);
                     setMessages((prev) => [
                       ...prev,
                       {
