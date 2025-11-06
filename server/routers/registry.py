@@ -12,14 +12,18 @@ router = APIRouter()
 
 
 class RegisteredAPI(BaseModel):
-    """Model for a registered API using UC HTTP Connections."""
+    """Model for a registered API using UC HTTP Connections (API-level registration)."""
     api_id: str
     api_name: str
     description: Optional[str] = None
-    connection_name: str  # UC HTTP Connection name (replaces api_endpoint + auth_type)
-    api_path: str  # Path to append to connection base URL
+    connection_name: str  # UC HTTP Connection name
+    host: str  # API host (e.g., "api.github.com")
+    base_path: Optional[str] = None  # Base path for API (e.g., "/v1", "/api", or empty)
+    auth_type: str  # Authentication type: "none", "api_key", or "bearer_token"
+    secret_scope: Optional[str] = None  # Secret scope: "mcp_api_keys" or "mcp_bearer_tokens"
     documentation_url: Optional[str] = None
-    http_method: str = 'GET'
+    available_endpoints: Optional[str] = None  # JSON array of available endpoints
+    example_calls: Optional[str] = None  # JSON array of example calls
     status: str = 'pending'
     user_who_requested: Optional[str] = None
     created_at: Optional[str] = None
@@ -119,16 +123,20 @@ async def list_apis(
         # Backticks handle catalogs/schemas with special characters (e.g., -f.default)
         table_name = f'`{catalog}`.`{schema}`.`api_http_registry`'
 
-        # Query the registry table
+        # Query the registry table (API-level registration)
         query = f"""
         SELECT
             api_id,
             api_name,
             description,
             connection_name,
-            api_path,
+            host,
+            base_path,
+            auth_type,
+            secret_scope,
             documentation_url,
-            http_method,
+            available_endpoints,
+            example_calls,
             status,
             user_who_requested,
             created_at,

@@ -16,10 +16,13 @@ interface RegisteredAPI {
   api_name: string;
   description: string;
   connection_name: string;      // UC HTTP Connection name
-  api_path: string;              // Path to append to connection
+  host: string;                 // API host (e.g., "api.github.com")
+  base_path?: string;           // Base path for API (e.g., "/v1", "/api")
+  auth_type: string;            // "none", "api_key", or "bearer_token"
+  secret_scope?: string;        // "mcp_api_keys" or "mcp_bearer_tokens"
   documentation_url?: string;
-  http_method: string;
-  parameters?: string;           // JSON string of parameter definitions
+  available_endpoints?: string; // JSON array of available endpoints
+  example_calls?: string;       // JSON array of example calls
   status: string;
   validation_message?: string;
   user_who_requested?: string;
@@ -140,8 +143,6 @@ export function RegistryPage({ selectedWarehouse, selectedCatalogSchema }: Regis
         warehouse_id: selectedWarehouse,
         api_name: editForm.api_name || '',
         description: editForm.description || '',
-        connection_name: editForm.connection_name || '',
-        api_path: editForm.api_path || '',
       });
 
       // Add documentation_url if provided
@@ -205,12 +206,12 @@ export function RegistryPage({ selectedWarehouse, selectedCatalogSchema }: Regis
     try {
       setTestingId(api.api_id);
 
-      // Call the API endpoint to test health using UC connection
+      // Call the API using the new execute_api_call tool
       const response = await fetch('/api/agent/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          messages: [{ role: 'user', content: `Test the UC HTTP connection "${api.connection_name}" with path "${api.api_path}"` }],
+          messages: [{ role: 'user', content: `Test the API "${api.api_name}" by calling it` }],
           model: 'databricks-claude-sonnet-4',
         }),
       });
@@ -380,16 +381,6 @@ export function RegistryPage({ selectedWarehouse, selectedCatalogSchema }: Regis
                         </div>
                         <div>
                           <label className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                            Endpoint
-                          </label>
-                          <Input
-                            value={editForm.api_endpoint || ''}
-                            onChange={(e) => setEditForm({ ...editForm, api_endpoint: e.target.value })}
-                            className={isDark ? 'bg-white/5 border-white/20 text-white' : ''}
-                          />
-                        </div>
-                        <div>
-                          <label className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
                             Documentation URL
                           </label>
                           <Input
@@ -398,6 +389,9 @@ export function RegistryPage({ selectedWarehouse, selectedCatalogSchema }: Regis
                             className={isDark ? 'bg-white/5 border-white/20 text-white' : ''}
                             placeholder="https://api.example.com/docs"
                           />
+                        </div>
+                        <div className={`text-xs ${isDark ? 'text-white/60' : 'text-gray-500'}`}>
+                          Note: Connection details (host, base_path, auth) are set during registration and cannot be edited.
                         </div>
                       </div>
                       <div className="flex gap-2 mt-4">
@@ -444,16 +438,27 @@ export function RegistryPage({ selectedWarehouse, selectedCatalogSchema }: Regis
                             </div>
                           </div>
                           <div>
-                            <span className="font-medium">Path:</span>
+                            <span className="font-medium">Host:</span>
                             <div className="mt-1 font-mono text-xs bg-black/20 px-2 py-1 rounded break-all">
-                              {redactSensitiveParams(api.api_path)}
+                              {api.host}
                             </div>
-                            {api.api_path !== redactSensitiveParams(api.api_path) && (
-                              <p className="text-xs text-orange-400 mt-1">
-                                ⚠️ Sensitive parameters redacted for security
-                              </p>
-                            )}
                           </div>
+                          {api.base_path && (
+                            <div>
+                              <span className="font-medium">Base Path:</span>
+                              <div className="mt-1 font-mono text-xs bg-black/20 px-2 py-1 rounded break-all">
+                                {api.base_path}
+                              </div>
+                            </div>
+                          )}
+                          <div>
+                            <span className="font-medium">Auth Type:</span> {api.auth_type}
+                          </div>
+                          {api.secret_scope && (
+                            <div>
+                              <span className="font-medium">Secret Scope:</span> {api.secret_scope}
+                            </div>
+                          )}
                           {api.documentation_url && (
                             <div>
                               <span className="font-medium">Documentation:</span>
@@ -468,29 +473,42 @@ export function RegistryPage({ selectedWarehouse, selectedCatalogSchema }: Regis
                               </a>
                             </div>
                           )}
-                          <div>
-                            <span className="font-medium">Method:</span> {api.http_method}
-                          </div>
-                          {api.parameters && (() => {
+                          {api.available_endpoints && (() => {
                             try {
-                              const paramConfig = JSON.parse(api.parameters);
-                              const queryParams = paramConfig.query_params || [];
-                              if (queryParams.length > 0) {
+                              const endpoints = JSON.parse(api.available_endpoints);
+                              if (endpoints && endpoints.length > 0) {
                                 return (
                                   <div>
-                                    <span className="font-medium">Parameters:</span>
+                                    <span className="font-medium">Available Endpoints:</span>
                                     <div className="mt-1 space-y-1">
-                                      {queryParams.map((param: any, idx: number) => (
+                                      {endpoints.map((endpoint: any, idx: number) => (
                                         <div key={idx} className={`text-xs ${isDark ? 'text-white/70' : 'text-gray-600'}`}>
-                                          <span className="font-mono">{param.name}</span>
-                                          {param.required && <span className="text-red-400 ml-1">*</span>}
-                                          {param.type && <span className={isDark ? 'text-white/50' : 'text-gray-400'}> ({param.type})</span>}
-                                          {param.description && <span className="ml-2">- {param.description}</span>}
-                                          {param.examples && param.examples.length > 0 && (
-                                            <div className={`ml-4 ${isDark ? 'text-white/40' : 'text-gray-400'}`}>
-                                              Examples: {param.examples.join(', ')}
-                                            </div>
-                                          )}
+                                          <span className="font-mono">{endpoint.method || 'GET'}</span>
+                                          <span className="ml-1 font-mono">{endpoint.path}</span>
+                                          {endpoint.description && <span className="ml-2">- {endpoint.description}</span>}
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                );
+                              }
+                            } catch (e) {
+                              return null;
+                            }
+                            return null;
+                          })()}
+                          {api.example_calls && (() => {
+                            try {
+                              const examples = JSON.parse(api.example_calls);
+                              if (examples && examples.length > 0) {
+                                return (
+                                  <div>
+                                    <span className="font-medium">Example Calls:</span>
+                                    <div className="mt-1 space-y-1">
+                                      {examples.map((example: any, idx: number) => (
+                                        <div key={idx} className={`text-xs ${isDark ? 'text-white/70' : 'text-gray-600'}`}>
+                                          <div className="font-mono">{example.path}</div>
+                                          {example.description && <div className="ml-2 text-xs">{example.description}</div>}
                                         </div>
                                       ))}
                                     </div>

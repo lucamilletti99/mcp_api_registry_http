@@ -13,5 +13,6 @@ export type AgentChatRequest = {
     system_prompt?: (string | null);
     warehouse_id?: (string | null);
     catalog_schema?: (string | null);
+    credentials?: (Record<string, string> | null);
 };
 
