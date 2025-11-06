@@ -865,18 +865,16 @@ LIMIT 1
       connection_name = api_info['connection_name']
       auth_type = api_info['auth_type']
       secret_scope = api_info['secret_scope']
-      base_path = api_info.get('base_path', '') or ''  # Get base_path from registry
+      base_path = api_info.get('base_path', '') or ''  # Get base_path from registry (for reference only)
       
-      # Combine base_path + dynamic path
-      # base_path might be empty, "/v1", "/api", etc.
-      # path is the dynamic part like "/repos" or "/series/GDPC1"
-      full_path = base_path + path
+      # IMPORTANT: The HTTP connection already has base_path configured in its OPTIONS!
+      # We should NOT prepend base_path to the dynamic path - the connection does that automatically.
+      # Just use the dynamic path directly.
       
       print(f"📡 Calling API: {api_name}")
       print(f"   Connection: {connection_name}")
-      print(f"   Base Path: {base_path}")
+      print(f"   Base Path (in connection): {base_path}")
       print(f"   Dynamic Path: {path}")
-      print(f"   Full Path: {full_path}")
       print(f"   Method: {http_method}")
       print(f"   Auth: {auth_type}")
       
@@ -902,12 +900,13 @@ LIMIT 1
           header_pairs.append(f"'{key}', '{value}'")
         headers_sql = f"map({', '.join(header_pairs)})"
       
-      # Build the http_request SQL with FULL path (base_path + dynamic path)
+      # Build the http_request SQL
+      # NOTE: Connection already has base_path configured, so we pass ONLY the dynamic path
       call_sql = f"""
 SELECT http_request(
   conn => '{connection_name}',
   method => '{http_method}',
-  path => '{full_path}',
+  path => '{path}',
   params => {params_sql},
   headers => {headers_sql}
 ) as response
@@ -928,7 +927,7 @@ SELECT http_request(
           'success': False,
           'error': f"API call failed: {error_msg}",
           'sql_query': call_sql,
-          'full_path': full_path
+          'path': path
         }
       
       # _execute_sql_query returns data as {'columns': [...], 'rows': [...]}
@@ -939,7 +938,7 @@ SELECT http_request(
           'success': False,
           'error': "No response from API",
           'sql_query': call_sql,
-          'full_path': full_path
+          'path': path
         }
       
       response_data = response_rows[0].get('response', '')
@@ -951,15 +950,14 @@ SELECT http_request(
         # Check if response indicates an error (404, 500, etc.)
         status_code = response_json.get('status_code', '200')
         if status_code == '404':
-          print(f"⚠️  API returned 404 - Path not found: {full_path}")
+          print(f"⚠️  API returned 404 - Path not found: {path}")
           return {
             'success': False,
-            'error': f"404 Not Found - The path '{full_path}' does not exist on this API",
+            'error': f"404 Not Found - The path '{path}' does not exist on this API",
             'status_code': 404,
             'api_name': api_name,
             'base_path': base_path,
-            'dynamic_path': path,
-            'full_path': full_path,
+            'path': path,
             'method': http_method,
             'sql_query': call_sql,
             'response': response_json
@@ -971,8 +969,7 @@ SELECT http_request(
           'success': True,
           'api_name': api_name,
           'base_path': base_path,
-          'dynamic_path': path,
-          'full_path': full_path,
+          'path': path,
           'method': http_method,
           'status_code': status_code,
           'sql_query': call_sql,
@@ -986,8 +983,7 @@ SELECT http_request(
           'success': True,
           'api_name': api_name,
           'base_path': base_path,
-          'dynamic_path': path,
-          'full_path': full_path,
+          'path': path,
           'method': http_method,
           'sql_query': call_sql,
           'response': response_data
