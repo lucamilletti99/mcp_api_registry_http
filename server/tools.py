@@ -863,10 +863,18 @@ LIMIT 1
       connection_name = api_info['connection_name']
       auth_type = api_info['auth_type']
       secret_scope = api_info['secret_scope']
+      base_path = api_info.get('base_path', '') or ''  # Get base_path from registry
+      
+      # Combine base_path + dynamic path
+      # base_path might be empty, "/v1", "/api", etc.
+      # path is the dynamic part like "/repos" or "/series/GDPC1"
+      full_path = base_path + path
       
       print(f"📡 Calling API: {api_name}")
       print(f"   Connection: {connection_name}")
-      print(f"   Path: {path}")
+      print(f"   Base Path: {base_path}")
+      print(f"   Dynamic Path: {path}")
+      print(f"   Full Path: {full_path}")
       print(f"   Method: {http_method}")
       print(f"   Auth: {auth_type}")
       
@@ -892,12 +900,12 @@ LIMIT 1
           header_pairs.append(f"'{key}', '{value}'")
         headers_sql = f"map({', '.join(header_pairs)})"
       
-      # Build the http_request SQL
+      # Build the http_request SQL with FULL path (base_path + dynamic path)
       call_sql = f"""
 SELECT http_request(
   conn => '{connection_name}',
   method => '{http_method}',
-  path => '{path}',
+  path => '{full_path}',
   params => {params_sql},
   headers => {headers_sql}
 ) as response
@@ -922,7 +930,9 @@ SELECT http_request(
         return {
           'success': True,
           'api_name': api_name,
-          'path': path,
+          'base_path': base_path,
+          'dynamic_path': path,
+          'full_path': full_path,
           'method': http_method,
           'response': response_json,
           'raw_response': response_data
@@ -932,7 +942,9 @@ SELECT http_request(
         return {
           'success': True,
           'api_name': api_name,
-          'path': path,
+          'base_path': base_path,
+          'dynamic_path': path,
+          'full_path': full_path,
           'method': http_method,
           'response': response_data
         }
