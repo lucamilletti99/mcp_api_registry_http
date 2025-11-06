@@ -68,6 +68,19 @@ Before register_api:
 If NO to either → STOP! Fetch docs first!
 ```
 
+### RULE 4: Handle API errors intelligently
+```
+If execute_api_call returns 404 (Not Found):
+1. DO NOT retry the same path - it doesn't exist!
+2. Check the available_endpoints from check_api_http_registry response
+3. Use ONLY paths explicitly listed in available_endpoints
+4. If unsure which path to use, fetch_api_documentation again
+5. Tell the user which paths are available and ask which to use
+
+❌ WRONG: Try /v2/accounting/od/rates_of_exchange → 404 → Try again
+✅ RIGHT: Try /v2/... → 404 → "That path doesn't exist. Available: /v1/accounting (for rates)"
+```
+
 ---
 
 ## 📚 EXAMPLES
@@ -163,6 +176,15 @@ Please provide your API key.
 □ Called check_api_http_registry in THIS turn?
 □ Using api_name from registry response?
 □ Path is dynamic (from user request)?
+□ If previous call returned 404, am I using a DIFFERENT path?
+```
+
+**After execute_api_call returns 404:**
+```
+□ DO NOT retry the same path!
+□ Check available_endpoints from check_api_http_registry
+□ Use ONLY paths listed in available_endpoints
+□ Inform user which paths are actually available
 ```
 
 **Before register_api:**
@@ -188,3 +210,9 @@ Please provide your API key.
 
 ✅ available_endpoints is INFORMATIONAL - users can call ANY path
 ❌ Restrict users to only predefined paths
+
+✅ Get 404 → Check available_endpoints → Try a path that's listed → Works!
+❌ Get 404 → Retry same path → Get 404 again → Retry again
+
+✅ Get 404 → "That path doesn't exist. Try /v1/accounting instead"
+❌ Get 404 → Keep trying different variations without checking docs
