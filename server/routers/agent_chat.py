@@ -261,6 +261,10 @@ async def execute_mcp_tool(tool_name: str, tool_args: Dict[str, Any], request: R
         credentials_var = None
         if credentials:
             print(f'🔐 [Tool Execution] Injecting secure credentials for tool: {tool_name}')
+            print(f'    Credential keys: {list(credentials.keys())}')
+            for key in credentials:
+                value_preview = credentials[key][:10] + '...' if len(credentials[key]) > 10 else credentials[key]
+                print(f'    {key}: {value_preview}')
             credentials_var = _credentials_context.set(credentials)
 
         try:
@@ -328,6 +332,13 @@ async def run_agent_loop(
     Returns:
         Final response with traces and trace_id
     """
+    # DEBUG: Log credentials at beginning of agent loop
+    print(f"🔐 [run_agent_loop] Received credentials: {credentials}")
+    if credentials:
+        for key, value in credentials.items():
+            value_preview = value[:10] + '...' if len(value) > 10 else value
+            print(f"    {key}: length={len(value)} chars, preview={value_preview}")
+    
     # Use custom system prompt if provided, otherwise load from markdown file
     if custom_system_prompt:
         system_prompt = custom_system_prompt
@@ -611,6 +622,22 @@ async def agent_chat(chat_request: AgentChatRequest, request: Request) -> AgentC
     Returns:
         Agent response with tool call traces
     """
+    # DEBUG: Log credentials received from frontend
+    print(f"=" * 80)
+    print(f"🔐 [agent_chat] RAW REQUEST DEBUGGING")
+    print(f"=" * 80)
+    print(f"Credentials object: {chat_request.credentials}")
+    print(f"Credentials type: {type(chat_request.credentials)}")
+    if chat_request.credentials:
+        for key, value in chat_request.credentials.items():
+            print(f"\n📝 Key: '{key}'")
+            print(f"   Type: {type(value)}")
+            print(f"   Length: {len(value)} chars")
+            print(f"   First 20 chars: {repr(value[:20])}")
+            print(f"   Last 10 chars: {repr(value[-10:])}")
+            print(f"   Full value (repr): {repr(value)}")
+    print(f"=" * 80)
+    
     try:
         # Create a trace for this conversation
         trace_manager = get_trace_manager()

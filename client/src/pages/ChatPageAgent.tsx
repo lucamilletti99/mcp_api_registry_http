@@ -1741,12 +1741,22 @@ export function ChatPageAgent({
                 const requiresAuth = endpointRegistrationData?.auth_type && endpointRegistrationData.auth_type !== "none";
                 if (requiresAuth && !credentialValue.trim()) return;
                 
+                // DEBUG: Log credential before sending
+                console.log(`🔐 [Frontend] Credential type: ${credentialType}`);
+                console.log(`🔐 [Frontend] Credential value length: ${credentialValue.length} chars`);
+                console.log(`🔐 [Frontend] Credential preview: ${credentialValue.substring(0, 10)}...`);
+                
                 // SECURE: Store credential in session state, NOT in message content!
                 // Build updated credentials object
                 const updatedCredentials = requiresAuth ? {
                   ...storedCredentials,
                   [credentialType]: credentialValue,
                 } : storedCredentials;
+                
+                console.log(`🔐 [Frontend] Updated credentials:`, {
+                  ...updatedCredentials,
+                  [credentialType]: updatedCredentials[credentialType]?.substring(0, 10) + '...'
+                });
                 
                 // Only update state if auth is required
                 if (requiresAuth) {

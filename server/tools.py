@@ -365,13 +365,38 @@ def load_tools(mcp_server):
 
   def _store_secret(scope_name: str, key_name: str, secret_value: str) -> dict:
     """Store a secret in a Databricks secret scope."""
+    print(f"🔐 [_store_secret] Attempting to store secret:")
+    print(f"    Scope: {scope_name}")
+    print(f"    Key: {key_name}")
+    print(f"    Value length: {len(secret_value)} chars")
+    
     try:
       w = _get_secrets_client()
+      print(f"🔐 [_store_secret] Got workspace client, calling put_secret...")
+      
       w.secrets.put_secret(scope=scope_name, key=key_name, string_value=secret_value)
-      print(f"🔐 Stored secret: {scope_name}/{key_name}")
+      
+      print(f"🔐 [_store_secret] put_secret() completed successfully!")
+      print(f"✅ Stored secret: {scope_name}/{key_name}")
+      
+      # VERIFY it was actually created
+      try:
+        print(f"🔍 [_store_secret] Verifying secret was created...")
+        secrets_list = list(w.secrets.list_secrets(scope=scope_name))
+        secret_keys = [s.key for s in secrets_list]
+        if key_name in secret_keys:
+          print(f"✅ [_store_secret] Verification: Secret {key_name} found in scope!")
+        else:
+          print(f"⚠️  [_store_secret] Verification: Secret {key_name} NOT found! Keys: {secret_keys}")
+      except Exception as verify_error:
+        print(f"⚠️  [_store_secret] Could not verify secret creation: {verify_error}")
+      
       return {'success': True, 'scope_name': scope_name, 'key_name': key_name}
     except Exception as e:
-      print(f"❌ Error storing secret: {str(e)}")
+      print(f"❌ [_store_secret] Error storing secret: {str(e)}")
+      print(f"❌ [_store_secret] Error type: {type(e).__name__}")
+      import traceback
+      traceback.print_exc()
       return {'success': False, 'error': str(e)}
 
   def _create_http_connection_sql(
@@ -510,14 +535,26 @@ def load_tools(mcp_server):
       if auth_type not in ['none', 'api_key', 'bearer_token']:
         return {'success': False, 'error': f"auth_type must be 'none', 'api_key', or 'bearer_token', got: {auth_type}"}
 
-      # SECURE: If secret_value not provided, try to get from credentials context
-      # This allows credentials to be passed as metadata instead of in chat messages
-      if auth_type in ['api_key', 'bearer_token'] and not secret_value:
+      # SECURE: ALWAYS check credentials context FIRST (ignore secret_value parameter)
+      # This prevents LLM from passing placeholder values like "YOUR_BEARER_TOKEN"
+      if auth_type in ['api_key', 'bearer_token']:
         credentials = _credentials_context.get()
+        print(f'🔐 [register_api] Auth type: {auth_type}, API name: {api_name}')
+        print(f'🔐 [register_api] secret_value param provided: {bool(secret_value)} (length: {len(secret_value) if secret_value else 0})')
+        print(f'🔐 [register_api] Credentials from context: {bool(credentials)}')
+        
         if credentials:
-          secret_value = credentials.get(auth_type)
-          if secret_value:
-            print(f'🔐 [register_api] Using credential from secure context for {api_name}')
+          print(f'    Credential keys available: {list(credentials.keys())}')
+          context_secret = credentials.get(auth_type)
+          if context_secret:
+            # ALWAYS prefer context over parameter (prevents LLM placeholder bug)
+            secret_value = context_secret
+            value_preview = secret_value[:10] + '...' if len(secret_value) > 10 else secret_value
+            print(f'✅ [register_api] Using credential from CONTEXT for {api_name}: {value_preview} ({len(secret_value)} chars)')
+          else:
+            print(f'❌ [register_api] Credential key "{auth_type}" not found in context! Available: {list(credentials.keys())}')
+        else:
+          print(f'⚠️  [register_api] No credentials in context, using parameter if provided')
         
         if not secret_value:
           return {'success': False, 'error': f"secret_value required for auth_type '{auth_type}'. Please provide your credential first."}
@@ -569,9 +606,18 @@ def load_tools(mcp_server):
           print(f"⚠️  Could not create secret scope '{scope_name}': {scope_result.get('error')}")
           print(f"⚠️  Assuming scope was pre-created by admin. Attempting to store secret...")
         
+        print(f"🔐 [register_api] About to store secret:")
+        print(f"    Scope: {scope_name}")
+        print(f"    Key: {secret_key}")
+        print(f"    Value length: {len(secret_value)} chars")
+        
         secret_result = _store_secret(scope_name, secret_key, secret_value)
+        
+        print(f"🔐 [register_api] Secret storage result: {secret_result}")
+        
         if not secret_result.get('success'):
           scope_type = "API keys" if auth_type == 'api_key' else "bearer tokens"
+          print(f"❌ [register_api] SECRET STORAGE FAILED!")
           return {
             'success': False,
             'error': f"Failed to store secret: {secret_result.get('error')}",
