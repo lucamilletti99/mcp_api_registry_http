@@ -12,6 +12,8 @@ An API discovery and management platform that runs on Databricks Apps:
 - **🛠️ MCP Server**: Programmatic API management tools
 - **📚 Smart Discovery**: Automatic endpoint testing and documentation parsing
 
+**Architecture:** This app uses a hybrid MCP design - the internal AI agent calls MCP tools directly via Python (fast, in-process) while also exposing a standard MCP server at `/mcp` for external clients like Claude CLI. Both paths share the same tool registry, giving you flexibility in how you interact with the API registry.
+
 ---
 
 ## Quick Start

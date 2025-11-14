@@ -21,28 +21,39 @@ Organizations need to:
 
 ## Key Architecture Decisions
 
-### 1. FastAPI + React + MCP
+### 1. Hybrid MCP Architecture
+
+**Traditional MCP:** Host → MCP Client → MCP Server (separate processes, SSE/stdio protocol)
+
+**Our Approach:** Hybrid architecture with two execution paths:
+- **Internal:** Agent loop → Direct Python calls → MCP tools (in-process, fast)
+- **External:** MCP clients → `/mcp` endpoint → MCP tools (standard protocol)
+
+```python
+# Internal execution (agent_chat.py)
+from server.app import mcp_server
+result = await mcp_server._tool_manager.call_tool(tool_name, args)  # Direct call
+
+# External exposure (app.py)
+mcp_asgi_app = mcp_server.http_app()  # Standard MCP at /mcp
+combined_app = FastAPI(routes=[*mcp_asgi_app.routes, *app.routes])
+```
+
+**Why this works:**
+- No MCP Client needed internally → Lower latency, simpler code
+- Standard MCP Server exposed → External tools (Claude CLI) can connect
+- Shared tool registry → Same tools for both paths
+
+### 2. FastAPI + React Integration
 
 **Why FastAPI?**
 - Automatic OpenAPI spec → becomes the contract between frontend, backend, and MCP
-- Native async support
+- Native async support for concurrent operations
 - Easy FastMCP integration
-
-**The Key Insight:**
-```python
-# server/app.py - Combine MCP and FastAPI routes
-mcp_asgi_app = mcp_server.http_app()
-app = FastAPI(lifespan=mcp_asgi_app.lifespan)
-
-combined_app = FastAPI(
-    routes=[*mcp_asgi_app.routes, *app.routes],  # MCP at /mcp, API at /api
-    lifespan=mcp_asgi_app.lifespan
-)
-```
 
 ---
 
-### 2. Unity Catalog HTTP Connections for Security
+### 3. Unity Catalog HTTP Connections for Security
 
 **The Choice:**
 - ❌ Store credentials in database → No encryption, security risk
@@ -61,7 +72,7 @@ Users never see credentials, just connection names.
 
 ---
 
-### 3. Two-Scope Secret Management
+### 4. Two-Scope Secret Management
 
 **The Evolution:**
 
@@ -82,7 +93,7 @@ mcp_bearer_tokens/     # For bearer token auth
 
 ---
 
-### 4. On-Behalf-Of Authentication
+### 5. On-Behalf-Of Authentication
 
 ```python
 def get_workspace_client() -> WorkspaceClient:
