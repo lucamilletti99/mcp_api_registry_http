@@ -1524,69 +1524,91 @@ export function ChatPageAgent({
           </DialogHeader>
           <div className="space-y-6 mt-4">
             <section>
-              <h3 className="text-lg font-semibold mb-2">🚀 Getting Started</h3>
-              <p className={isDark ? "text-gray-300" : "text-gray-700"}>
-                The API Registry Agent uses MCP (Model Context Protocol) tools to help you discover, register, query, and test API endpoints. Simply chat with the agent using natural language!
+              <h3 className="text-lg font-semibold mb-2">📚 Step-by-Step Workflow</h3>
+              <p className={isDark ? "text-gray-300 mb-4" : "text-gray-700 mb-4"}>
+                Follow this workflow to register and use APIs: provide documentation → review requirements → register → query data
               </p>
+              
+              <div className="space-y-4">
+                <div className={`p-4 rounded-lg ${isDark ? "bg-white/5" : "bg-gray-50"}`}>
+                  <div className="flex items-start gap-3">
+                    <span className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center font-semibold text-sm">1</span>
+                    <div>
+                      <h4 className="font-semibold mb-1">Provide API Documentation</h4>
+                      <p className={`text-sm ${isDark ? "text-gray-300" : "text-gray-600"} mb-2`}>
+                        Share the API documentation URL or describe what you need. The AI will discover available endpoints and authentication requirements.
+                      </p>
+                      <p className={`text-xs italic ${isDark ? "text-gray-400" : "text-gray-500"}`}>
+                        Example: "I need the FRED API for economic data. Docs: https://fred.stlouisfed.org/docs/api/fred/"
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className={`p-4 rounded-lg ${isDark ? "bg-white/5" : "bg-gray-50"}`}>
+                  <div className="flex items-start gap-3">
+                    <span className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center font-semibold text-sm">2</span>
+                    <div>
+                      <h4 className="font-semibold mb-1">Review & Provide Credentials</h4>
+                      <p className={`text-sm ${isDark ? "text-gray-300" : "text-gray-600"} mb-2`}>
+                        The AI will tell you what's needed (API key, bearer token, or no auth). Provide your credentials securely.
+                      </p>
+                      <p className={`text-xs italic ${isDark ? "text-gray-400" : "text-gray-500"}`}>
+                        Example: "Yes, register it with API key: abc123..."
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className={`p-4 rounded-lg ${isDark ? "bg-white/5" : "bg-gray-50"}`}>
+                  <div className="flex items-start gap-3">
+                    <span className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center font-semibold text-sm">3</span>
+                    <div>
+                      <h4 className="font-semibold mb-1">Verify Registration</h4>
+                      <p className={`text-sm ${isDark ? "text-gray-300" : "text-gray-600"} mb-2`}>
+                        Confirm the API was registered successfully and check its status.
+                      </p>
+                      <p className={`text-xs italic ${isDark ? "text-gray-400" : "text-gray-500"}`}>
+                        Example: "Show me all registered APIs"
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className={`p-4 rounded-lg ${isDark ? "bg-white/5" : "bg-gray-50"}`}>
+                  <div className="flex items-start gap-3">
+                    <span className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center font-semibold text-sm">4</span>
+                    <div>
+                      <h4 className="font-semibold mb-1">Query Data Naturally</h4>
+                      <p className={`text-sm ${isDark ? "text-gray-300" : "text-gray-600"} mb-2`}>
+                        Ask questions in natural language. The AI will call the registered API and return the data.
+                      </p>
+                      <p className={`text-xs italic ${isDark ? "text-gray-400" : "text-gray-500"}`}>
+                        Example: "Get GDP data from FRED for the last 10 quarters"
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </section>
 
             <section>
-              <h3 className="text-lg font-semibold mb-2">🎯 Quick Actions</h3>
-              <p className={isDark ? "text-gray-300 mb-2" : "text-gray-700 mb-2"}>
-                Use the quick action buttons for common tasks:
-              </p>
-              <ul className={`list-disc list-inside space-y-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}>
-                <li><strong>Discover:</strong> Find and explore new APIs from the web</li>
-                <li><strong>Register:</strong> Add APIs to your centralized registry</li>
-                <li><strong>Query:</strong> Check what APIs are in your registry</li>
-                <li><strong>Test:</strong> Verify API health and functionality</li>
-                <li><strong>Tools:</strong> See all available MCP tools</li>
-              </ul>
-            </section>
-
-            <section>
-              <h3 className="text-lg font-semibold mb-2">💬 Example Prompts</h3>
-              <ul className={`list-disc list-inside space-y-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}>
-                <li>"Discover APIs related to weather data"</li>
-                <li>"Register the API at https://api.example.com"</li>
-                <li>"What APIs are in my registry?"</li>
-                <li>"Test if my weather API is healthy"</li>
-                <li>"Execute a SQL query to count all registered APIs"</li>
-              </ul>
-            </section>
-
-            <section>
-              <h3 className="text-lg font-semibold mb-2">🛠️ Available Tools</h3>
-              <ul className={`list-disc list-inside space-y-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}>
-                <li><strong>create_http_connection:</strong> Create UC HTTP connections (secure credentials)</li>
+              <h3 className="text-lg font-semibold mb-2">🛠️ Key Tools Available</h3>
+              <ul className={`list-disc list-inside space-y-1 text-sm ${isDark ? "text-gray-300" : "text-gray-700"}`}>
                 <li><strong>smart_register_with_connection:</strong> One-step API registration (creates connection + registers API)</li>
                 <li><strong>discover_api_endpoint:</strong> Test and validate API endpoints</li>
                 <li><strong>fetch_api_documentation:</strong> Parse API documentation</li>
                 <li><strong>check_api_http_registry:</strong> View registered APIs</li>
                 <li><strong>call_registered_api:</strong> Call registered APIs via UC connections</li>
                 <li><strong>execute_dbsql:</strong> Run SQL queries on Databricks</li>
-                <li><strong>list_warehouses:</strong> List SQL warehouses</li>
-                <li><strong>list_http_connections:</strong> List UC HTTP connections</li>
-                <li><strong>list_dbfs_files:</strong> Browse DBFS files</li>
               </ul>
             </section>
 
             <section>
               <h3 className="text-lg font-semibold mb-2">⚙️ Custom System Prompt</h3>
-              <p className={isDark ? "text-gray-300" : "text-gray-700"}>
-                Click the "Add System Prompt" button on the right edge to customize the agent's behavior and role for your specific use case.
+              <p className={`text-sm ${isDark ? "text-gray-300" : "text-gray-700"}`}>
+                Click the "Add System Prompt" button to customize the agent's behavior for your specific use case.
               </p>
-            </section>
-
-            <section>
-              <h3 className="text-lg font-semibold mb-2">✨ Features</h3>
-              <ul className={`list-disc list-inside space-y-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}>
-                <li>Markdown rendering for formatted responses</li>
-                <li>Real-time tool execution tracking</li>
-                <li>Model selection (Claude, Llama, etc.)</li>
-                <li>Dark/Light theme toggle</li>
-                <li>Conversation history management</li>
-              </ul>
             </section>
           </div>
         </DialogContent>
