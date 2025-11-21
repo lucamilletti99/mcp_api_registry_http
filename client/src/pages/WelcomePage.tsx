@@ -230,17 +230,14 @@ export function WelcomePage() {
               </div>
 
               <div>
-                <h4 className="font-semibold mb-3">Step 2: Discover & Register APIs</h4>
+                <h4 className="font-semibold mb-3">Step 2: Discover API Documentation & Register APIs</h4>
                 <div className="space-y-2 text-sm ml-2">
                   <p className="text-muted-foreground">Ask the AI agent in natural language:</p>
                   <div className="bg-muted px-3 py-2 rounded">
-                    <code className="text-xs">"Register the FRED economic data API"</code>
+                    <code className="text-xs">"Check the FRED economic data API from this URL: https://fred.stlouisfed.org/docs/api/fred/"</code>
                   </div>
                   <div className="bg-muted px-3 py-2 rounded">
-                    <code className="text-xs">"Get GDP data from the FRED API"</code>
-                  </div>
-                  <div className="bg-muted px-3 py-2 rounded">
-                    <code className="text-xs">"List all registered APIs"</code>
+                    <code className="text-xs">"I want to register a new api for github: https://docs.github.com/en/rest/repos/repos. Let me know what I need to provide you"</code>
                   </div>
                 </div>
               </div>
