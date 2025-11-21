@@ -224,23 +224,23 @@ export function ChatPage() {
   const suggestedActions = [
     {
       icon: <Search className="h-4 w-4" />,
-      label: "Discover",
-      prompt: "Discover the Alpha Vantage API for stock data",
+      label: "1. Provide API Docs",
+      prompt: "I need to access economic data from the FRED API. Here's the documentation: https://fred.stlouisfed.org/docs/api/fred/",
     },
     {
       icon: <Database className="h-4 w-4" />,
-      label: "Register",
-      prompt: "Help me register a new API in the registry",
+      label: "2. Register API",
+      prompt: "Register this API with my credentials",
     },
     {
       icon: <FileJson className="h-4 w-4" />,
-      label: "Query",
+      label: "3. Verify Registration",
       prompt: "Show me all registered APIs in the registry",
     },
     {
       icon: <TestTube className="h-4 w-4" />,
-      label: "Test",
-      prompt: "Test if my registered API is still healthy",
+      label: "4. Query Data",
+      prompt: "Get GDP data from FRED for the last 10 quarters, series GDPC1",
     },
   ];
 
@@ -321,7 +321,7 @@ export function ChatPage() {
                 <p className={`text-lg ${
                   isDark ? "text-white/80" : "text-gray-600"
                 }`}>
-                  I can help you discover, register, and manage API endpoints
+                  Follow the workflow below: provide API docs → review requirements → register → query data
                 </p>
               </div>
 
@@ -373,6 +373,80 @@ export function ChatPage() {
                     {action.label}
                   </Button>
                 ))}
+              </div>
+
+              {/* User Guide */}
+              <div className={`mt-8 p-6 rounded-xl ${
+                isDark
+                  ? "bg-white/5 border border-white/10"
+                  : "bg-white/80 border border-gray-200"
+              } backdrop-blur-sm shadow-lg`}>
+                <h2 className={`text-lg font-semibold mb-4 ${
+                  isDark ? "text-white" : "text-gray-900"
+                }`}>
+                  📚 Quick Start Guide
+                </h2>
+                <div className="space-y-4">
+                  <div className={`${isDark ? "text-white/90" : "text-gray-700"}`}>
+                    <div className="flex items-start gap-3">
+                      <span className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center font-semibold text-sm">1</span>
+                      <div>
+                        <h3 className="font-semibold mb-1">Provide API Documentation</h3>
+                        <p className={`text-sm ${isDark ? "text-white/70" : "text-gray-600"}`}>
+                          Share the API documentation URL or describe what you need. The AI will discover available endpoints and authentication requirements.
+                        </p>
+                        <p className={`text-xs mt-2 italic ${isDark ? "text-white/60" : "text-gray-500"}`}>
+                          Example: "I need the FRED API for economic data. Docs: https://fred.stlouisfed.org/docs/api/fred/"
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className={`${isDark ? "text-white/90" : "text-gray-700"}`}>
+                    <div className="flex items-start gap-3">
+                      <span className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center font-semibold text-sm">2</span>
+                      <div>
+                        <h3 className="font-semibold mb-1">Review & Provide Credentials</h3>
+                        <p className={`text-sm ${isDark ? "text-white/70" : "text-gray-600"}`}>
+                          The AI will tell you what's needed (API key, bearer token, or no auth). Provide your credentials securely.
+                        </p>
+                        <p className={`text-xs mt-2 italic ${isDark ? "text-white/60" : "text-gray-500"}`}>
+                          Example: "Yes, register it with API key: abc123..."
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className={`${isDark ? "text-white/90" : "text-gray-700"}`}>
+                    <div className="flex items-start gap-3">
+                      <span className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center font-semibold text-sm">3</span>
+                      <div>
+                        <h3 className="font-semibold mb-1">Verify Registration</h3>
+                        <p className={`text-sm ${isDark ? "text-white/70" : "text-gray-600"}`}>
+                          Confirm the API was registered successfully and check its status.
+                        </p>
+                        <p className={`text-xs mt-2 italic ${isDark ? "text-white/60" : "text-gray-500"}`}>
+                          Example: "Show me all registered APIs"
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className={`${isDark ? "text-white/90" : "text-gray-700"}`}>
+                    <div className="flex items-start gap-3">
+                      <span className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center font-semibold text-sm">4</span>
+                      <div>
+                        <h3 className="font-semibold mb-1">Query Data Naturally</h3>
+                        <p className={`text-sm ${isDark ? "text-white/70" : "text-gray-600"}`}>
+                          Ask questions in natural language. The AI will call the registered API and return the data.
+                        </p>
+                        <p className={`text-xs mt-2 italic ${isDark ? "text-white/60" : "text-gray-500"}`}>
+                          Example: "Get GDP data from FRED for the last 10 quarters"
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

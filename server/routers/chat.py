@@ -35,7 +35,7 @@ class ChatRequest(BaseModel):
     """Request to send a chat message."""
 
     messages: List[ChatMessage]
-    model: str = 'databricks-gpt-5'  # Default model
+    model: str = 'databricks-claude-sonnet-4-5'  # Default model
     max_tokens: int = 4096
 
 
@@ -212,7 +212,7 @@ async def list_available_models() -> Dict[str, Any]:
         },
     ]
 
-    return {'models': models, 'default': 'databricks-gpt-5'}
+    return {'models': models, 'default': 'databricks-claude-sonnet-4-5'}
 
 
 def convert_mcp_tools_to_openai_format(mcp_tools: List[Any]) -> List[Dict[str, Any]]:
